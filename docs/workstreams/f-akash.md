@@ -39,3 +39,5 @@ From the attacker laptop, `curl` against the Akash URI → injection → `nc -lv
 - **From A:** a trap image that builds with `docker build -f Dockerfile.trap .` (by checkpoint 3).
 - **From B/C:** the control server running locally on port 8080, so you can point the tunnel at it.
 - **To everyone:** the tunnel URL (= `CONTROL_URL`) and the Akash service URI, posted in team chat.
+
+**Current plan:** [`deploy/AKASH_PLAN.md`](../../deploy/AKASH_PLAN.md) (status, the two image blockers, tunnel, public listener, SDL, rehearsal).
