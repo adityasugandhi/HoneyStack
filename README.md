@@ -8,6 +8,12 @@ A honeypot where the attacker's "reverse shell" is an LLM pretending to be bash.
 - Interfaces between workstreams: [`docs/contracts.md`](docs/contracts.md)
 - Akash plan: [`deploy/AKASH_PLAN.md`](deploy/AKASH_PLAN.md)
 
+## Architecture
+
+![HoneyStack architecture: attacker to trap (Akash) to control server to Guild and ClickHouse to dashboard](assets/architecture.svg)
+
+The attacker exploits the fake Hivewell app on **Akash** and gets a "reverse shell" that is really a **Guild** agent playing bash. The **control server** answers each command (fast path from `world.json`, else Guild) and is the only writer to **ClickHouse**; a second Guild agent turns a session into the playbook shown on the dashboard. Full detail with sequence diagrams: [`docs/architecture.md`](docs/architecture.md).
+
 ## Akash deployment (Workstream F)
 
 The trap runs on Akash. Current demo deployment:
