@@ -74,15 +74,19 @@ HoneyStack is built in six parallel workstreams (trap, shell brain, data, dashbo
 
 > Also available as a standalone page: [`docs/deploy.md`](docs/deploy.md).
 
-The trap runs on Akash. Current demo deployment:
+The trap is built and deployed by **CI/CD** (GitHub Actions, `.github/workflows/cd.yml`)
+on every push to `main`. The table below is **updated automatically** by that pipeline
+after each deploy — do not edit between the markers.
 
+<!-- AKASH-DEPLOY:START -->
 | Field | Value |
 |---|---|
-| Live URL | http://ve9t9r8ep99cl0pfaqremov764.ingress.zencloud.eu/ |
-| DSEQ | `1791581948124` |
-| Provider | zencloud.eu (`akash16yr3wxt…`) |
-| Image | `ghcr.io/adityasugandhi/honeystack-trap@sha256:2801db47…` (public, amd64) |
-| Status | Trap serving (`/health` → `{"status":"ok"}`). Bait routes return `503` until the control server + tunnel are wired (set `CONTROL_URL`/`INGEST_TOKEN`/`CALLBACK_ALLOWLIST` in `deploy/akash.yaml`). |
+| Live trap URL | http://hh63djmhnpcrtbrkgct0gmlveo.ingress.h6i-dedicated.eu-se-1.digitalfrontier.so/ |
+| DSEQ | `1791584389473` |
+| Image | `ghcr.io/adityasugandhi/honeystack-trap:latest` |
+| Control tunnel | https://characteristics-insurance-disciplines-ppm.trycloudflare.com |
+| Updated | pending first CI run |
+<!-- AKASH-DEPLOY:END -->
 
 ### Deploy / redeploy
 

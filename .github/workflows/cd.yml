@@ -42,10 +42,13 @@ jobs:
             ghcr.io/${{ github.repository_owner }}/honeystack-trap:latest
             ghcr.io/${{ github.repository_owner }}/honeystack-trap:${{ github.sha }}
 
-  # Deploy the trap to Akash, pointed at the live control tunnel (CONTROL_URL).
+  # Deploy the trap to Akash, pointed at the live control tunnel (CONTROL_URL),
+  # then auto-sync the live URL into README.md (the URL is dynamic per deploy).
   deploy:
     needs: build-trap
     runs-on: ubuntu-latest
+    permissions:
+      contents: write   # to commit the README URL update back to main
     steps:
       - uses: actions/checkout@v4
       - name: Render trap SDL and deploy to Akash
@@ -65,11 +68,34 @@ jobs:
           grep -vE 'TOKEN|PASSWORD|KEY' /tmp/trap.rendered.yaml || true
           echo "::endgroup::"
           sh scripts/deploy-stack.sh /tmp/trap.rendered.yaml | tee /tmp/deploy.out
+          DSEQ="$(grep -oE 'DSEQ: [0-9]+' /tmp/deploy.out | head -1 | awk '{print $2}')"
+          # The ingress hostname can take longer than the deploy script waits;
+          # poll the deployment for up to 5 more minutes to capture the final URL.
+          URI=""
+          for i in $(seq 1 60); do
+            URI="$(curl -s "https://console-api.akash.network/v1/deployments/$DSEQ" \
+              -H "x-api-key: $AKASH_API_KEY" \
+              | jq -r '.data.leases[0].status.services.trap.uris[0] // empty')"
+            [ -n "$URI" ] && break
+            sleep 5
+          done
+          echo "Resolved DSEQ=$DSEQ URI=${URI:-<pending>}"
+          sh scripts/update-readme.sh "$DSEQ" "$URI" "ghcr.io/${{ github.repository_owner }}/honeystack-trap:${{ github.sha }}" "$CONTROL_URL"
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add README.md
+          if git diff --cached --quiet; then
+            echo "README already current."
+          else
+            git commit -m "docs: auto-update live Akash trap URL [skip ci]"
+            git pull --rebase --autostash origin main || true
+            git push origin HEAD:main
+          fi
           {
             echo "## Akash trap deploy";
-            grep -E 'DSEQ:|Service URI:' /tmp/deploy.out || echo "(no URI captured)";
-            echo "";
-            echo "Control tunnel: \`${CONTROL_URL}\`";
+            echo "- DSEQ: \`$DSEQ\`";
+            echo "- Live URL: http://${URI:-pending}/";
+            echo "- Control tunnel: \`${CONTROL_URL}\`";
           } >> "$GITHUB_STEP_SUMMARY"
 
   # Optional: build+push the control image too (not on the deploy critical path;
