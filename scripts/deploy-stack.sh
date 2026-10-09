@@ -11,7 +11,9 @@ AKASH_API_KEY="${AKASH_API_KEY:-${akash_key:-}}"
 
 API=https://console-api.akash.network
 SDL=$(cat "$SDL_FILE")
-if echo "$SDL" | grep -q '${'; then
+# Guard against an unrendered template — but ignore comment lines, which may
+# mention ${PLACEHOLDERS} in prose without being real values.
+if printf '%s\n' "$SDL" | grep -v '^[[:space:]]*#' | grep -q '[$]{'; then
   echo "ERROR: SDL still has unrendered \${...} placeholders — run envsubst first." >&2
   exit 1
 fi

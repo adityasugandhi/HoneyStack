@@ -1,4 +1,4 @@
-# Trap SDL (CI template). CI renders ${PLACEHOLDERS} with envsubst at deploy time,
+# Trap SDL (CI template). CI fills the placeholders with envsubst at deploy time,
 # so no secret is committed. The trap runs on Akash (public) and talks to the
 # control server through CONTROL_URL (the cloudflared tunnel) with INGEST_TOKEN.
 # ClickHouse + shell-brain + Guild all live behind that tunnel, not on Akash.

@@ -57,7 +57,7 @@ jobs:
           INGEST_TOKEN: ${{ secrets.INGEST_TOKEN }}
           CALLBACK_ALLOWLIST: ${{ vars.CALLBACK_ALLOWLIST }}
         run: |
-          set -eu
+          set -euo pipefail
           command -v envsubst >/dev/null 2>&1 || (sudo apt-get update && sudo apt-get install -y gettext-base)
           envsubst '${TRAP_IMAGE} ${CONTROL_URL} ${INGEST_TOKEN} ${CALLBACK_ALLOWLIST}' \
             < deploy/akash.yaml > /tmp/trap.rendered.yaml
