@@ -1,0 +1,19 @@
+{
+  "name": "honeystack",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev:trap": "node apps/trap/server.mjs",
+    "build:css": "tailwindcss -c tailwind.config.cjs -i apps/trap/styles.src.css -o apps/trap/public/styles.css --minify",
+    "test": "node --test tests/*.test.mjs",
+    "docker:build": "sh scripts/build-trap.sh",
+    "smoke": "sh scripts/smoke.sh"
+  },
+  "devDependencies": {
+    "tailwindcss": "3.4.17"
+  },
+  "dependencies": {
+    "zod": "^4.6.5"
+  }
+}
