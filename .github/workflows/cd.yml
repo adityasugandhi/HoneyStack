@@ -55,7 +55,11 @@ jobs:
         env:
           AKASH_API_KEY: ${{ secrets.AKASH_API_KEY }}
           SKIP_PROVIDERS: ${{ vars.SKIP_PROVIDERS }}
-          CLOSE_STALE: "1"   # one trap at a time: close older leases after deploy
+          # Only reconcile to one-trap and touch main from a main run. A PR/branch
+          # run deploys a throwaway trap, verifies it, and leaves main's lease alone.
+          CLOSE_STALE: ${{ github.ref_name == 'main' && '1' || '0' }}
+          ON_MAIN: ${{ github.ref_name == 'main' && 'yes' || 'no' }}
+          REF_NAME: ${{ github.ref_name }}
           TRAP_IMAGE: ghcr.io/${{ github.repository_owner }}/honeystack-trap:${{ github.sha }}
           CONTROL_URL: ${{ vars.CONTROL_URL }}
           INGEST_TOKEN: ${{ secrets.INGEST_TOKEN }}
@@ -74,16 +78,21 @@ jobs:
           DSEQ="$(grep -oE 'DSEQ: [0-9]+' /tmp/deploy.out | head -1 | awk '{print $2}')"
           URI="$(grep -oE 'Service URI: [^ ]+' /tmp/deploy.out | awk '{print $3}' | grep -v 'not-ready-yet' || true)"
           echo "Resolved DSEQ=$DSEQ URI=${URI:-<pending>}"
-          sh scripts/update-readme.sh "$DSEQ" "$URI" "ghcr.io/${{ github.repository_owner }}/honeystack-trap:${{ github.sha }}" "$CONTROL_URL"
-          git config user.name  "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add README.md
-          if git diff --cached --quiet; then
-            echo "README already current."
+          if [ "$ON_MAIN" != "yes" ]; then
+            echo "Not on main (ref=$REF_NAME): skipping README auto-commit; main's lease untouched."
+            echo "NOTE: this branch run left a throwaway trap at DSEQ=$DSEQ — close it with scripts/close-deployment.sh $DSEQ"
           else
-            git commit -m "docs: auto-update live Akash trap URL [skip ci]"
-            git pull --rebase --autostash origin main || true
-            git push origin HEAD:main
+            sh scripts/update-readme.sh "$DSEQ" "$URI" "$TRAP_IMAGE" "$CONTROL_URL"
+            git config user.name  "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add README.md
+            if git diff --cached --quiet; then
+              echo "README already current."
+            else
+              git commit -m "docs: auto-update live Akash trap URL [skip ci]"
+              git pull --rebase --autostash origin main || true
+              git push origin HEAD:main
+            fi
           fi
           {
             echo "## Akash trap deploy";
