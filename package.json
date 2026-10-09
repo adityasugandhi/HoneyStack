@@ -1,0 +1,22 @@
+{
+  "name": "honeystack",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev:shell": "tsx --env-file-if-exists=.env scripts/dev-control.ts",
+    "shell:repl": "tsx --env-file-if-exists=.env scripts/shell-repl.ts",
+    "test": "tsx --test tests/*.test.ts",
+    "typecheck": "tsc --noEmit",
+    "analyze": "tsx --env-file-if-exists=.env scripts/analyze.ts"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.133.0",
+    "fastify": "^5.12.5",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
+  }
+}

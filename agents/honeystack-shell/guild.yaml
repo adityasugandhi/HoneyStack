@@ -1,0 +1,7 @@
+# No tools: the shell agent only turns commands into terminal output.
+models:
+  - provider: anthropic
+    model: claude-haiku-5-5
+  - provider: anthropic
+    model: claude-haiku-4-5
+  - provider: anthropic

@@ -32,3 +32,10 @@ A teammate who hasn't seen `world.json` uses your REPL for 20 commands and doesn
 ## Hand-offs
 - **To A and F:** the control server running on port 8080 with `/v1/shell/*` live (by checkpoint 2).
 - **From F:** rehearsal notes on what felt fake. Fix them in `world.json` or the fast path.
+
+## Running it (implemented)
+- `npm install`, put `LLM_API_KEY` in `.env`, then `npm run dev:shell` (control server on :8080 with `/v1/shell/*` and the Guild routes) and `npm run shell:repl` in another terminal. `SHOW_SOURCE=1` prints `fast_path` / `llm` / `filter` per command.
+- `npm test` covers the fast path, session state, network fiction, and the output filter without calling the LLM.
+- **For C:** turns go to `data/shell_turns.jsonl` until you call `setTurnSink(insertShellTurn)` from `apps/control/shell-brain.ts`. Register the routes with `registerShellRoutes(app)`.
+- `scripts/dev-control.ts` is a stand-in for C's `apps/control/server.ts` and can be deleted once that exists.
+- **Guild backend:** `SHELL_BACKEND=guild` sends every command the fast path can't answer to the `honeystack-shell` Guild agent (one Guild session per attacker shell, started at `/v1/shell/open`). Setup: [`agents/GUILD_SETUP.md`](../../agents/GUILD_SETUP.md). Turns then carry `served_by: "guild"` plus `guild_session_id` / `guild_event_id` (proposed C2 columns, see `docs/clickhouse-plan.md`). Default `SHELL_BACKEND=anthropic` calls the Anthropic API directly.
