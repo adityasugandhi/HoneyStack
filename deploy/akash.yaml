@@ -4,7 +4,7 @@
 version: "2.0"
 services:
   trap:
-    image: REPLACE_WITH_PINNED_IMAGE   # ghcr.io/adityasugandhi/honeystack-trap@sha256:<digest>
+    image: ghcr.io/adityasugandhi/honeystack-trap@sha256:2801db477694dedc414a74930e9a68c8144e417e1aae983cc3462233f47388f8
     env:
       - NODE_ENV=production
       - PORT=3000
