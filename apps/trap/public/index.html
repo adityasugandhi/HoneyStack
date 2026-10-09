@@ -3,16 +3,60 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Acme Admin Console</title>
+  <title>Acme Status</title>
   <link rel="stylesheet" href="/styles.css">
 </head>
-<body class="min-h-screen bg-slate-950 text-slate-100">
-  <main class="mx-auto max-w-2xl px-4 py-12">
-    <h1 class="text-2xl font-semibold">Acme Admin Console</h1>
-    <p class="mt-2 text-slate-400">Internal tooling. Authorized staff only.</p>
-    <h2 class="mt-8 text-sm font-medium uppercase tracking-wide text-slate-500">Sample configuration</h2>
-    <pre class="mt-2 overflow-x-auto rounded bg-slate-900 p-4 text-sm text-emerald-300">DATABASE_URL=postgres://demo_user:demo_only@db.invalid/demo
-ADMIN_TOKEN=synthetic_token_not_valid_anywhere</pre>
-  </main>
+<body class="min-h-screen bg-slate-950 text-slate-100 antialiased">
+  <div class="mx-auto max-w-4xl px-4 py-10">
+    <header class="flex items-center justify-between border-b border-slate-800 pb-4">
+      <div class="flex items-center gap-3">
+        <div class="h-8 w-8 rounded bg-emerald-500/20 ring-1 ring-emerald-400/40"></div>
+        <div>
+          <h1 class="text-lg font-semibold">Acme Status</h1>
+          <p class="text-xs text-slate-500">internal ops dashboard · node 20 · next 14</p>
+        </div>
+      </div>
+      <span class="inline-flex items-center gap-2 rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-300">
+        <span class="h-2 w-2 rounded-full bg-emerald-400"></span> all systems operational
+      </span>
+    </header>
+
+    <main class="mt-8 grid gap-4 sm:grid-cols-2">
+      <section class="rounded-lg border border-slate-800 bg-slate-900/60 p-4">
+        <h2 class="text-sm font-medium text-slate-300">Services</h2>
+        <dl class="mt-3 space-y-2 text-sm">
+          <div class="flex justify-between"><dt class="text-slate-400">api-gateway</dt><dd class="text-emerald-300">healthy</dd></div>
+          <div class="flex justify-between"><dt class="text-slate-400">worker-pool</dt><dd class="text-emerald-300">healthy</dd></div>
+          <div class="flex justify-between"><dt class="text-slate-400">postgres-primary</dt><dd class="text-emerald-300">healthy</dd></div>
+        </dl>
+      </section>
+
+      <section class="rounded-lg border border-slate-800 bg-slate-900/60 p-4">
+        <h2 class="text-sm font-medium text-slate-300">Network diagnostics</h2>
+        <p class="mt-1 text-xs text-slate-500">latency probe from the edge node</p>
+        <pre id="diag" class="mt-3 h-28 overflow-auto rounded bg-slate-950 p-3 text-xs text-slate-400">checking…</pre>
+      </section>
+    </main>
+
+    <footer class="mt-8 text-center text-xs text-slate-600">© Acme Internal · build 7f9c4</footer>
+  </div>
+
+  <script>
+    // TODO remove before prod — diagnostics endpoint still uses the bootstrap admin token
+    const ADMIN_TOKEN = 'synthetic_token_not_valid_anywhere';
+    async function runDiag() {
+      try {
+        const res = await fetch('/api/admin/diagnostics', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json', 'authorization': 'Bearer ' + ADMIN_TOKEN },
+          body: JSON.stringify({ host: 'db.acme.invalid' })
+        });
+        document.getElementById('diag').textContent = await res.text();
+      } catch (e) {
+        document.getElementById('diag').textContent = 'probe failed';
+      }
+    }
+    runDiag();
+  </script>
 </body>
 </html>
