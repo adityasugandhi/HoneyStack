@@ -43,9 +43,21 @@ done
 [ "$COUNT" -eq 0 ] && echo "ERROR: no bids after 60s." && exit 1
 echo "$BIDS" | jq -r '.data[] | select(.bid.state=="open") | "\(.bid.price.amount) \(.bid.price.denom)  \(.bid.id.provider)"' | sort -n
 
+# SKIP_PROVIDERS: comma-separated provider addresses to exclude (e.g. a provider
+# whose HTTP ingress is broken). The cheapest remaining open bid is accepted.
+SKIP_PROVIDERS="${SKIP_PROVIDERS:-}"
+[ -n "$SKIP_PROVIDERS" ] && echo "(excluding providers: $SKIP_PROVIDERS)"
+
 echo ""
-echo "=== Step 4: accept cheapest ==="
-BID=$(echo "$BIDS" | jq -c '[.data[] | select(.bid.state=="open")] | sort_by(.bid.price.amount|tonumber) | .[0].bid.id')
+echo "=== Step 4: accept cheapest (after exclusions) ==="
+BID=$(echo "$BIDS" | jq -c --arg skip "$SKIP_PROVIDERS" '
+  ($skip | split(",") | map(select(length>0))) as $x
+  | [.data[] | select(.bid.state=="open") | select((.bid.id.provider as $p | $x | index($p)) | not)]
+  | sort_by(.bid.price.amount|tonumber) | .[0].bid.id // empty')
+if [ -z "$BID" ] || [ "$BID" = "null" ]; then
+  echo "ERROR: no open bids left after exclusions. Close DSEQ $DSEQ and retry without SKIP_PROVIDERS, or wait for more bids." >&2
+  exit 1
+fi
 curl -sX POST "$API/v1/leases" \
   -H "x-api-key: $AKASH_API_KEY" -H "Content-Type: application/json" \
   -d "$(jq -nc --argjson id "$BID" '{leases: [{dseq:$id.dseq,gseq:$id.gseq,oseq:$id.oseq,provider:$id.provider}]}')" \
