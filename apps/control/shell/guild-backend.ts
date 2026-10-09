@@ -3,7 +3,8 @@
 import { guildFetch, isTransient, type GuildConfig } from '../guild';
 import type { World } from './world';
 
-const REPLY_TIMEOUT_MS = Number(process.env.GUILD_SHELL_TIMEOUT_MS || 60_000);
+// Kept below the trap's 90 s per-command budget so the Anthropic fallback still has time to answer.
+const REPLY_TIMEOUT_MS = Number(process.env.GUILD_SHELL_TIMEOUT_MS || 45_000);
 
 interface GuildShell {
   sessionId: string;

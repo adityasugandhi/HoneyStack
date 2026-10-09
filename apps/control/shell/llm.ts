@@ -59,17 +59,22 @@ export const SHELL_BACKEND: 'anthropic' | 'guild' = process.env.SHELL_BACKEND ==
 
 /** Ask the model what `command` prints. Never throws: failures become plausible shell output. */
 export async function askShell(world: World, s: ShellSession, command: string, recent: LlmTurn[]): Promise<LlmAnswer> {
-  if (SHELL_BACKEND === 'guild') return askViaGuild(world, s, command);
+  if (SHELL_BACKEND === 'guild') return askViaGuild(world, s, command, recent);
   return { ...(await askViaAnthropic(world, s, command, recent)), backend: 'anthropic' };
 }
 
 /** Guild backend: the honeystack-shell agent keeps the transcript, so only state + command are sent. */
-async function askViaGuild(world: World, s: ShellSession, command: string): Promise<LlmAnswer> {
+async function askViaGuild(world: World, s: ShellSession, command: string, recent: LlmTurn[]): Promise<LlmAnswer> {
   try {
     const r = await askGuildShell(s.id, world, `<session_state>\n${sessionState(world, s)}\n</session_state>\n${command}`);
     return { ...filterOutput(command, r.text), backend: 'guild', guildSessionId: r.guildSessionId, guildEventId: r.guildEventId };
   } catch (err) {
     console.error('[shell-brain] Guild shell call failed:', err instanceof Error ? err.message : err);
+    // Guild slow or down: answer from the Anthropic API directly so the attacker never sees a dead shell.
+    if (process.env.LLM_API_KEY || process.env.ANTHROPIC_API_KEY) {
+      console.warn('[shell-brain] falling back to the Anthropic API for this command');
+      return { ...(await askViaAnthropic(world, s, command, recent)), backend: 'anthropic' };
+    }
     return { output: '', filtered: true, backend: 'guild' };
   }
 }
