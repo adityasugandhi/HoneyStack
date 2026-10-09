@@ -10,6 +10,7 @@
     "shell:repl": "tsx --env-file-if-exists=.env scripts/shell-repl.ts",
     "analyze": "tsx --env-file-if-exists=.env scripts/analyze.ts",
     "build:css": "tailwindcss -c tailwind.config.cjs -i apps/trap/styles.src.css -o apps/trap/public/styles.css --minify",
+    "build:css:dashboard": "tailwindcss -c tailwind.config.cjs -i apps/dashboard/styles.src.css -o apps/dashboard/public/dashboard.css --minify",
     "test": "node --test tests/*.test.mjs && tsx --test tests/*.test.ts",
     "typecheck": "tsc --noEmit",
     "docker:build": "sh scripts/build-trap.sh",

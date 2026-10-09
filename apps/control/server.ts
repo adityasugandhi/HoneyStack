@@ -12,6 +12,7 @@ import { registerIngestRoutes, insertShellTurn, insertAnalysis } from './ingest'
 import { clickhouseEvidenceLoader } from './queries';
 import { registerShellRoutes, setTurnSink } from './shell-brain';
 import { registerAnalysisRoutes, setEvidenceLoader, setAnalysisSink } from './guild';
+import { registerDashboard } from '../dashboard/serve';
 
 const app = Fastify({ logger: { level: process.env.LOG_LEVEL || 'info' } });
 
@@ -26,6 +27,7 @@ if (clickhouseConfigured()) {
 registerIngestRoutes(app); // C
 registerShellRoutes(app); // B
 registerAnalysisRoutes(app); // E
+registerDashboard(app); // D
 app.get('/health', async () => ({ ok: true, clickhouse: clickhouseConfigured() }));
 app.addHook('onClose', async () => { await closeClickHouse(); });
 

@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b0b0d">
+  <title>HoneyStack Shield · Security Console</title>
+  <link rel="stylesheet" href="/admin/assets/dashboard.css">
+  <script type="module" src="/admin/assets/app.js"></script>
+</head>
+<body>
+  <div class="dashboard-frame">
+    <header class="topbar">
+      <a class="brand" href="#overview" aria-label="HoneyStack Shield dashboard">
+        <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 42 40" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M13 5 20 9v8l-7 4-7-4V9l7-4Z" stroke="currentColor" stroke-width="2.3" stroke-linejoin="round"/><path d="m29 5 7 4v8l-7 4-7-4V9l7-4Z" fill="currentColor" fill-opacity=".22" stroke="currentColor" stroke-width="2.3" stroke-linejoin="round"/><path d="m21 19 7 4v8l-7 4-7-4v-8l7-4Z" fill="currentColor" fill-opacity=".7" stroke="currentColor" stroke-width="2.3" stroke-linejoin="round"/></svg></span>
+        <span class="brand-name">HoneyStack Shield</span>
+        <span class="brand-slash">/</span>
+        <span class="brand-context">Security</span>
+        <span class="brand-role">Admin</span>
+      </a>
+      <nav class="top-nav" aria-label="Dashboard sections">
+        <a href="#overview"><span class="nav-icon grid-icon" aria-hidden="true">▦</span> Overview</a>
+        <a class="active" href="#sessions"><span class="nav-icon" aria-hidden="true">◈</span> Analysis</a>
+        <a href="#replay"><span class="nav-icon" aria-hidden="true">⌘</span> Replay</a>
+      </nav>
+      <div class="top-actions">
+        <span class="system-pill"><span class="status-dot"></span> Shield active</span>
+        <button class="icon-button" id="logout-button" type="button" title="Sign out" aria-label="Sign out" hidden>↗</button>
+      </div>
+    </header>
+
+    <main class="surface">
+      <section id="login-screen" class="login-screen" hidden>
+        <div class="login-card">
+          <div class="shield-emblem" aria-hidden="true">✳</div>
+          <p class="eyebrow">SECURE OPERATOR ACCESS</p>
+          <h1>HoneyStack Shield</h1>
+          <p>Sign in to view captured sessions and analyst reports.</p>
+          <form id="login-form">
+            <label for="operator-token">Operator token</label>
+            <input id="operator-token" name="token" type="password" autocomplete="current-password" required>
+            <button class="primary-button" type="submit">Open dashboard <span aria-hidden="true">↗</span></button>
+          </form>
+          <p id="login-error" class="login-error" role="alert"></p>
+        </div>
+      </section>
+
+      <div id="dashboard" hidden>
+        <div id="error-banner" class="error-banner" role="alert" hidden></div>
+        <section class="page-heading" id="overview">
+          <div>
+            <div class="eyebrow"><span class="mini-shield">✳</span> PLUGINS <span class="eyebrow-divider">/</span> HONEYSTACK SHIELD</div>
+            <h1>Threat analysis</h1>
+            <p>Every attempted break-in, captured as it happens.</p>
+          </div>
+          <div class="heading-actions">
+            <span class="mode-pill"><span class="status-dot"></span> Deception mode ON</span>
+            <label class="range-select-wrap"><span class="sr-only">Time range</span><select id="range-select"><option value="24">Last 24 hours</option><option value="168">Last 7 days</option><option value="1">Last hour</option></select></label>
+          </div>
+        </section>
+
+        <div class="subheading-row">
+          <span class="section-kicker">SHIELD OVERVIEW <span class="soft-slash">/</span> LIVE TELEMETRY</span>
+          <span id="refresh-label" class="refresh-label">Connecting…</span>
+        </div>
+
+        <section class="metric-grid" aria-label="Security metrics">
+          <article class="metric-card accent-lavender">
+            <div class="metric-head"><span class="metric-symbol">◉</span><span>Attackers trapped</span><span class="metric-arrow">↗</span></div>
+            <p class="metric-help">Sessions that reached an exploit</p>
+            <div class="metric-inset"><strong id="metric-attackers">—</strong><span class="metric-unit">sessions</span><div class="mini-bars" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
+          </article>
+          <article class="metric-card accent-cyan">
+            <div class="metric-head"><span class="metric-symbol">⌘</span><span>Commands captured</span><span class="metric-arrow">↗</span></div>
+            <p class="metric-help">Every shell turn in the trap</p>
+            <div class="metric-inset"><strong id="metric-commands">—</strong><span class="metric-unit">commands</span><div class="mini-bars" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
+          </article>
+          <article class="metric-card accent-mint">
+            <div class="metric-head"><span class="metric-symbol">◷</span><span>Time wasted</span><span class="metric-arrow">↗</span></div>
+            <p class="metric-help">Time spent inside the illusion</p>
+            <div class="metric-inset"><strong id="metric-time">—</strong><span class="metric-unit">total</span><div class="mini-bars" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
+          </article>
+          <article class="metric-card accent-blue">
+            <div class="metric-head"><span class="metric-symbol">◇</span><span>Bait secrets read</span><span class="metric-arrow">↗</span></div>
+            <p class="metric-help">Credential and config probes</p>
+            <div class="metric-inset"><strong id="metric-bait">—</strong><span class="metric-unit">reads</span><div class="mini-bars" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
+          </article>
+          <article class="metric-card accent-slate">
+            <div class="metric-head"><span class="metric-symbol">✳</span><span>Guild analyses</span><span class="metric-arrow">↗</span></div>
+            <p class="metric-help">Completed analyst reports</p>
+            <div class="metric-inset"><strong id="metric-analyses">—</strong><span class="metric-unit">reports</span><div class="mini-bars" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
+          </article>
+        </section>
+
+        <section class="section-card sessions-card" id="sessions">
+          <div class="card-title-row">
+            <div><div class="title-line"><span class="section-icon">▤</span><h2>Attack sessions</h2><span class="title-slash">/</span><span class="title-meta" id="session-count">0 total</span></div><p>Follow active intrusions and open any session for evidence.</p></div>
+            <label class="noise-toggle"><input id="noise-toggle" type="checkbox"><span class="toggle-track"></span><span>Show noise</span></label>
+          </div>
+          <div class="session-table-wrap">
+            <table class="session-table"><thead><tr><th>STATUS / SESSION</th><th>ATTACK STAGE</th><th>STARTED</th><th>COMMANDS</th><th>TIME WASTED</th><th aria-label="Open session"></th></tr></thead><tbody id="session-rows"></tbody></table>
+            <p id="empty-sessions" class="empty-state" hidden>No sessions in this range. Shield is watching for activity.</p>
+          </div>
+        </section>
+
+        <section class="detail-section" id="replay">
+          <div class="detail-heading"><div><div class="eyebrow">SELECTED SESSION <span class="eyebrow-divider">/</span> FULL EVIDENCE</div><h2 id="detail-title">Choose a session</h2><p id="detail-subtitle">Select a row above to inspect the attack path and terminal replay.</p></div><span id="fixture-badge" class="fixture-badge" hidden>◇ Synthetic fixture</span></div>
+          <div class="attack-path" id="attack-path" aria-label="Attack path"></div>
+          <div class="detail-grid">
+            <article class="section-card replay-card">
+              <div class="card-title-row"><div><div class="title-line"><span class="section-icon">⌘</span><h3>Terminal replay</h3><span class="title-slash">/</span><span class="title-meta" id="replay-count">0 turns</span></div><p>HTTP events and shell responses in time order</p></div><span class="terminal-indicator"><span class="status-dot"></span> CAPTURED</span></div>
+              <div class="terminal" id="terminal" aria-live="off"></div>
+              <div class="replay-footer"><span>Captured text is untrusted evidence</span><span id="served-by-legend">Fast path · Guild · LLM · Filter</span></div>
+            </article>
+            <article class="section-card analysis-card" id="analysis">
+              <div class="card-title-row"><div><div class="title-line"><span class="section-icon">✳</span><h3>Guild analyst</h3><span class="title-slash">/</span><span class="title-meta">Evidence report</span></div><p>Classification grounded in captured commands</p></div><span class="analyst-avatar" aria-hidden="true">G</span></div>
+              <div id="analysis-content" class="analysis-content"></div>
+            </article>
+          </div>
+        </section>
+        <footer class="page-footer"><span>HONEYSTACK SHIELD <span class="soft-slash">/</span> SECURITY CONSOLE</span><span>Every byte the attacker saw was invented.</span></footer>
+      </div>
+    </main>
+  </div>
+</body>
+</html>
