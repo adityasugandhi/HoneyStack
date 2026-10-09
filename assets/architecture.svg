@@ -1,0 +1,128 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1060 640" font-family="ui-sans-serif,-apple-system,Segoe UI,Roboto,sans-serif" role="img" aria-label="HoneyStack architecture diagram">
+  <defs>
+    <marker id="arw" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#8a97b2"/>
+    </marker>
+    <style>
+      .grp{fill:none;stroke:#33405a;stroke-width:1.2;rx:12}
+      .glbl{fill:#8ea0bd;font-size:12px;font-weight:700;letter-spacing:.08em}
+      .box{stroke-width:1.3;rx:9}
+      .t{fill:#e7ecf6;font-size:13px;font-weight:600}
+      .s{fill:#9fb0c9;font-size:11px;font-family:ui-monospace,Menlo,Consolas,monospace}
+      .edge{stroke:#8a97b2;stroke-width:1.5;fill:none}
+      .elbl{fill:#aeb9cf;font-size:10.5px}
+      .elblm{fill:#aeb9cf;font-size:10px;font-family:ui-monospace,Menlo,Consolas,monospace}
+    </style>
+  </defs>
+
+  <rect x="0" y="0" width="1060" height="640" rx="16" fill="#0e1320" stroke="#263244"/>
+  <!-- honeycomb accent -->
+  <path d="M30 26 l10 6 v12 l-10 6 l-10 -6 v-12 z" fill="none" stroke="#f0b429" stroke-width="1.6"/>
+  <text x="56" y="34" fill="#f0b429" font-size="22" font-weight="700">HoneyStack</text>
+  <text x="188" y="34" fill="#c7d2e6" font-size="22" font-weight="400">— architecture</text>
+  <text x="56" y="56" fill="#8ea0bd" font-size="12.5">The “reverse shell” is an LLM playing bash. The control server is the only writer to ClickHouse.</text>
+
+  <!-- ATTACKER -->
+  <rect class="grp" x="24" y="78" width="188" height="300" rx="12"/>
+  <text class="glbl" x="38" y="98">ATTACKER</text>
+  <rect class="box" x="40" y="112" width="156" height="60" rx="9" fill="#2a1a18" stroke="#e06a5a"/>
+  <text class="t" x="52" y="138">Browser / curl</text>
+  <text class="s" x="52" y="156">recon · token · ;id</text>
+  <rect class="box" x="40" y="300" width="156" height="60" rx="9" fill="#2a1a18" stroke="#e06a5a"/>
+  <text class="t" x="52" y="326">nc listener :4444</text>
+  <text class="s" x="52" y="344">public, allowlisted</text>
+
+  <!-- AKASH -->
+  <rect class="grp" x="232" y="78" width="150" height="300" rx="12"/>
+  <text class="glbl" x="246" y="98">AKASH</text>
+  <rect class="box" x="248" y="150" width="118" height="110" rx="9" fill="#2a2410" stroke="#f0b429"/>
+  <text class="t" x="262" y="186">Trap (A)</text>
+  <text class="s" x="262" y="206">fake Hivewell</text>
+  <text class="s" x="262" y="222">status app</text>
+  <text class="s" x="262" y="238">+ revshell relay</text>
+
+  <!-- CONTROL SERVER -->
+  <rect class="grp" x="402" y="78" width="300" height="300" rx="12"/>
+  <text class="glbl" x="416" y="98">CONTROL SERVER :8080</text>
+  <rect x="418" y="112" width="130" height="56" rx="9" fill="#102423" stroke="#4fd1c5" stroke-width="1.3"/>
+  <text class="t" x="430" y="134">Ingest (C)</text>
+  <text class="s" x="430" y="152">/v1/events/batch</text>
+  <rect x="418" y="196" width="130" height="56" rx="9" fill="#141d33" stroke="#7aa2f7" stroke-width="1.3"/>
+  <text class="t" x="430" y="218">Shell brain (B)</text>
+  <text class="s" x="430" y="236">/v1/shell/*</text>
+  <rect x="560" y="196" width="128" height="26" rx="7" fill="#141d33" stroke="#39445e" stroke-width="1.1"/>
+  <text class="s" x="572" y="213">fast path · world.json</text>
+  <rect x="560" y="228" width="128" height="26" rx="7" fill="#141d33" stroke="#39445e" stroke-width="1.1"/>
+  <text class="s" x="572" y="245">character filter</text>
+  <rect x="418" y="296" width="130" height="56" rx="9" fill="#2a1522" stroke="#f7768e" stroke-width="1.3"/>
+  <text class="t" x="430" y="318">Analyst API (E)</text>
+  <text class="s" x="430" y="336">/v1/analyze</text>
+
+  <!-- GUILD -->
+  <rect class="grp" x="726" y="78" width="306" height="150" rx="12"/>
+  <text class="glbl" x="740" y="98">GUILD · evanb~honeystack</text>
+  <rect x="742" y="112" width="132" height="92" rx="9" fill="#141d33" stroke="#7aa2f7" stroke-width="1.3"/>
+  <text class="t" x="754" y="136">honeystack-shell</text>
+  <text class="s" x="754" y="156">plays bash,</text>
+  <text class="s" x="754" y="172">1 per attacker</text>
+  <rect x="886" y="112" width="130" height="92" rx="9" fill="#2a1522" stroke="#f7768e" stroke-width="1.3"/>
+  <text class="t" x="898" y="136">honeystack-</text>
+  <text class="t" x="898" y="152">analyst</text>
+  <text class="s" x="898" y="172">playbook JSON</text>
+
+  <!-- CLICKHOUSE -->
+  <g>
+    <path d="M412 430 a90 14 0 0 0 180 0 v70 a90 14 0 0 1 -180 0 z" fill="#2a2410" stroke="#ffcf70" stroke-width="1.3"/>
+    <ellipse cx="502" cy="430" rx="90" ry="14" fill="#2a2410" stroke="#ffcf70" stroke-width="1.3"/>
+    <text class="t" x="462" y="470">ClickHouse</text>
+    <text class="s" x="440" y="490">events · shell_turns</text>
+  </g>
+
+  <!-- DASHBOARD -->
+  <rect x="726" y="420" width="306" height="120" rx="12" fill="#1c1430" stroke="#bb9af7" stroke-width="1.3"/>
+  <text class="glbl" x="740" y="442" fill="#bb9af7">DASHBOARD (D) · HoneyStack Shield</text>
+  <text class="s" x="740" y="468">timeline · terminal replay</text>
+  <text class="s" x="740" y="486">time wasted · stage strip</text>
+  <text class="s" x="740" y="504">Analyze (CONTROL_TOKEN)</text>
+
+  <!-- EDGES -->
+  <!-- browser -> trap -->
+  <path class="edge" d="M196 142 H248" marker-end="url(#arw)"/>
+  <text class="elbl" x="200" y="134">HTTP</text>
+  <!-- trap -> nc -->
+  <path class="edge" d="M256 260 C 230 300, 220 310, 196 324" marker-end="url(#arw)"/>
+  <text class="elblm" x="150" y="286">TCP callback</text>
+  <!-- trap -> ingest -->
+  <path class="edge" d="M366 160 C 390 150, 396 140, 418 136" marker-end="url(#arw)"/>
+  <text class="elblm" x="360" y="140">events</text>
+  <!-- trap -> shell brain -->
+  <path class="edge" d="M366 220 H418" marker-end="url(#arw)"/>
+  <text class="elbl" x="368" y="214">command</text>
+  <!-- shell brain -> fast path / filter -->
+  <path class="edge" d="M548 213 H560" marker-end="url(#arw)"/>
+  <path class="edge" d="M548 240 H560" marker-end="url(#arw)"/>
+  <!-- shell brain -> guild shell -->
+  <path class="edge" d="M688 208 C 712 200, 720 180, 742 166" marker-end="url(#arw)"/>
+  <text class="elbl" x="612" y="196">miss → Guild</text>
+  <!-- guild shell -> filter (reply) -->
+  <path class="edge" d="M742 190 C 712 215, 706 232, 688 240" marker-end="url(#arw)"/>
+  <text class="elbl" x="612" y="262">reply</text>
+  <!-- ingest -> clickhouse -->
+  <path class="edge" d="M470 168 C 466 300, 470 360, 478 416" marker-end="url(#arw)"/>
+  <text class="elblm" x="396" y="300">insertEvents</text>
+  <!-- shell brain -> clickhouse -->
+  <path class="edge" d="M512 252 C 514 320, 516 370, 516 416" marker-end="url(#arw)"/>
+  <text class="elblm" x="520" y="330">insertShellTurn</text>
+  <!-- dashboard -> clickhouse -->
+  <path class="edge" d="M726 470 H596" marker-end="url(#arw)"/>
+  <text class="elblm" x="604" y="462">reads</text>
+  <!-- dashboard -> analyst -->
+  <path class="edge" d="M726 500 C 640 500, 600 360, 550 332" marker-end="url(#arw)"/>
+  <text class="elbl" x="604" y="520">Analyze</text>
+  <!-- analyst -> guild analyst -->
+  <path class="edge" d="M548 304 C 760 300, 860 240, 905 206" marker-end="url(#arw)"/>
+  <text class="elbl" x="690" y="330">evidence (untrusted)</text>
+  <!-- guild analyst -> analyst -->
+  <path class="edge" d="M900 204 C 820 270, 640 318, 550 320" marker-end="url(#arw)"/>
+  <text class="elbl" x="690" y="352">JSON summary</text>
+</svg>
