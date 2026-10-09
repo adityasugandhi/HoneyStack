@@ -7,3 +7,4 @@ dist/
 local-scaffold/
 data/
 .guild/
+deploy/*.local.yaml

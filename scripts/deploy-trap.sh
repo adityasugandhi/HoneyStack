@@ -1,7 +1,7 @@
 #!/bin/sh
 # Workstream F — deploy the trap SDL (deploy/akash.yaml) to Akash via Console API.
 # Prereq: the image in deploy/akash.yaml is pushed (public GHCR) and digest-pinned.
-# Usage: sh scripts/deploy-trap.sh
+# Usage: SDL_FILE=deploy/akash.local.yaml sh scripts/deploy-trap.sh   (local copy holds CONTROL_URL, INGEST_TOKEN, CALLBACK_ALLOWLIST)
 set -eu
 
 if [ -f .env ]; then set -a; . ./.env; set +a; fi
@@ -9,8 +9,16 @@ AKASH_API_KEY="${AKASH_API_KEY:-${akash_key:-}}"
 : "${AKASH_API_KEY:?akash_key or AKASH_API_KEY must be set in .env}"
 
 API=https://console-api.akash.network
-SDL_FILE=deploy/akash.yaml
+SDL_FILE="${SDL_FILE:-deploy/akash.yaml}"   # point at a gitignored copy with secrets filled in
 SDL=$(cat "$SDL_FILE")
+
+# Guard: refuse to deploy with any unfilled placeholder (image, CONTROL_URL, token, allowlist).
+if echo "$SDL" | grep -q 'REPLACE_'; then
+  echo "ERROR: $SDL_FILE still has placeholders:" >&2
+  echo "$SDL" | grep -n 'REPLACE_' | sed 's/INGEST_TOKEN=.*/INGEST_TOKEN=.../' >&2
+  echo "Copy deploy/akash.yaml to deploy/akash.local.yaml (gitignored), fill it in, run with SDL_FILE=deploy/akash.local.yaml" >&2
+  exit 1
+fi
 
 # Guard: refuse to deploy an unpinned placeholder image.
 if echo "$SDL" | grep -q 'REPLACE_WITH_PINNED_IMAGE'; then
