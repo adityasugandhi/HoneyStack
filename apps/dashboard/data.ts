@@ -86,6 +86,12 @@ function fileTimelines(): Map<string, TimelineItem[]> {
     a.at.localeCompare(b.at) || (a.kind === b.kind ? (a.seq ?? 0) - (b.seq ?? 0) : a.kind === 'event' ? -1 : 1))]));
 }
 
+/** True when the attacker's last shell command was `exit`/`logout`: the shell is closed. */
+export function endedByExit(timeline: TimelineItem[]): boolean {
+  const last = timeline.filter((item) => item.kind === 'turn').at(-1);
+  return Boolean(last && /^(exit|logout)\s*$/i.test(String((last.data as { command: string }).command)));
+}
+
 function fileSummary(sessionId: string, timeline: TimelineItem[]): SessionSummary {
   const first = timeline[0]?.at || new Date().toISOString();
   const last = timeline.at(-1)?.at || first;
@@ -149,7 +155,7 @@ export async function dashboardSessions(sinceHours = 24, limit = 60): Promise<Da
   const summaries = await listSessions({ sinceHours, limit });
   return Promise.all(summaries.map(async (summary) => {
     const [timeline, saved] = await Promise.all([getTimeline(summary.session_id), getLatestAnalysis(summary.session_id)]);
-    return { ...summary, stage: stageFromTimeline(timeline), analysis_state: getAnalysis(currentJobs.get(summary.session_id) || '')?.state ?? saved?.state ?? null,
+    return { ...summary, live: summary.live && !endedByExit(timeline), stage: stageFromTimeline(timeline), analysis_state: getAnalysis(currentJobs.get(summary.session_id) || '')?.state ?? saved?.state ?? null,
       bait_reads: baitReadCount(timeline), fixture: summary.origin_labels.includes('synthetic_fixture') };
   }));
 }
@@ -161,7 +167,7 @@ export async function dashboardSession(sessionId: string): Promise<{ summary: Da
     ? (await listSessions({ sinceHours: 24 * 7, limit: 500 })).find((row) => row.session_id === sessionId) ?? fileSummary(sessionId, timeline)
     : fileSummary(sessionId, timeline);
   const analysis = await analysisForSession(sessionId);
-  return { summary: { ...summary, stage: stageFromTimeline(timeline), analysis_state: analysis?.state ?? null,
+  return { summary: { ...summary, live: summary.live && !endedByExit(timeline), stage: stageFromTimeline(timeline), analysis_state: analysis?.state ?? null,
     bait_reads: baitReadCount(timeline), fixture: summary.origin_labels.includes('synthetic_fixture') }, timeline, analysis };
 }
 

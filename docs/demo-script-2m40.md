@@ -1,12 +1,12 @@
 # HoneyStack 2:40 Demo Script
 
 **Target runtime:** 2 minutes 40 seconds  
-**Format:** Acme Status admin portal and attacker terminal first, followed by the HoneyStack Shield dashboard  
+**Format:** Hivewell Status page and attacker terminal first, followed by the HoneyStack Shield dashboard  
 **Core message:** Everything the attacker sees is synthetic, but everything they do becomes defense intelligence.
 
 ## Before going on stage
 
-- Open the Acme Status admin portal and the attacker terminal side by side.
+- Open the Hivewell Status page and the attacker terminal side by side.
 - Start the netcat listener before the timer begins.
 - Put the longer `curl` commands in terminal history so they can be recalled with the up arrow.
 - Open HoneyStack Shield in another tab with the session list ready.
@@ -14,13 +14,13 @@
 
 ## 0:00–0:38 — Hook
 
-**Screen:** Acme Status admin portal beside the attacker terminal.
+**Screen:** Hivewell Status page beside the attacker terminal.
 
 **Presenter:**
 
 > Most honeypots tell you somebody knocked. HoneyStack lets the attacker walk in—and quietly replaces the building around them.
 >
-> This is the admin portal for Acme Status. An attacker finds a leaked admin token, discovers a vulnerable diagnostics tool, and uses it to launch a reverse shell. Their terminal connects, and they believe they own our server.
+> This is the admin portal for Hivewell Status. An attacker finds a leaked admin token, discovers a vulnerable diagnostics tool, and uses it to launch a reverse shell. Their terminal connects, and they believe they own our server.
 >
 > But nothing they type is ever executed. We place them inside a completely synthetic machine, keep them exploring, and record every move they make. Let’s watch it happen.
 
@@ -56,7 +56,7 @@ cat ~/.aws/credentials
 
 **Presenter:**
 
-> Acme’s site has HoneyStack Shield installed. The attacker thought they broke in—here’s what Shield saw.
+> Hivewell’s site has HoneyStack Shield installed. The attacker thought they broke in—here’s what Shield saw.
 >
 > We can watch the complete attack path, replay their terminal command by command, see how each response was generated, and measure how long we kept them occupied.
 
@@ -84,7 +84,7 @@ cat ~/.aws/credentials
 
 ## Condensed stage cues
 
-1. Show Acme Status and deliver the hook.
+1. Show Hivewell Status and deliver the hook.
 2. Reveal the token from `/api/env`.
 3. Inject `8.8.8.8; id` through diagnostics.
 4. Launch the prepared reverse-shell payload.

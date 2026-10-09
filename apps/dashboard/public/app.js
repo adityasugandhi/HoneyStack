@@ -177,6 +177,7 @@ function renderReplay(detail) {
     terminal.append(node('p', 'terminal-empty', 'No captured evidence yet.'));
     return;
   }
+  let turnNumber = 0; // by position: shell-brain seq starts at 1, fixture seq at 0
   for (const item of detail.timeline) {
     if (item.kind === 'event') {
       const data = item.data;
@@ -194,11 +195,12 @@ function renderReplay(detail) {
     const turn = node('div', `timeline-item shell-turn ${state.highlighted.has(item.id) ? 'evidence-highlight' : ''}`);
     turn.dataset.evidenceId = item.id;
     const meta = node('div', 'turn-meta');
-    append(meta, node('span', 'turn-index', `#${String(Number(data.seq) + 1).padStart(2, '0')}`),
+    append(meta, node('span', 'turn-index', `#${String(++turnNumber).padStart(2, '0')}`),
       node('span', 'turn-time', timeOf(item.at)), node('span', `served-badge served-${data.served_by}`, data.served_by === 'fast_path' ? 'FAST' : String(data.served_by).toUpperCase()));
-    if (data.served_by === 'guild') meta.append(link('Guild ↗', detail.analysis?.guild_session_url, 'guild-inline-link'));
+    // Link to the honeystack-shell session that wrote this output (not the analyst's session).
+    if (data.served_by === 'guild' && data.guild_session_id) meta.append(link('Guild ↗', `https://app.guild.ai/sessions/${encodeURIComponent(data.guild_session_id)}`, 'guild-inline-link'));
     const prompt = node('div', 'terminal-command');
-    append(prompt, node('span', 'terminal-prompt', `node@acme-status-7f9c4:${data.cwd || '/app'}$`), node('span', 'command-text', data.command));
+    append(prompt, node('span', 'terminal-prompt', `node@hivewell-status-7f9c4:${data.cwd || '/app'}$`), node('span', 'command-text', data.command));
     append(turn, meta, prompt, node('pre', 'terminal-output', data.output || ''));
     terminal.append(turn);
   }

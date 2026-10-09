@@ -123,3 +123,14 @@ test('captured text is inserted as text, never parsed as markup', () => {
   assert.match(source, /textContent/);
   assert.match(source, /hostname === 'app\.guild\.ai'/);
 });
+
+test('a session whose last command was exit is not live, and replay links point at the shell agent', async () => {
+  const { endedByExit } = await import('../apps/dashboard/data');
+  const turn = (seq: number, command: string) => ({ kind: 'turn' as const, id: `t${seq}`, at: `2026-10-09T18:00:0${seq}.000Z`, seq, data: { command } as never });
+  assert.equal(endedByExit([turn(1, 'id'), turn(2, 'exit')]), true);
+  assert.equal(endedByExit([turn(1, 'exit'), turn(2, 'id')]), false);
+  assert.equal(endedByExit([]), false);
+  const app = readFileSync(new URL('../apps/dashboard/public/app.js', import.meta.url), 'utf8');
+  assert.doesNotMatch(app, /acme-status/);
+  assert.match(app, /app\.guild\.ai\/sessions\/\$\{encodeURIComponent\(data\.guild_session_id\)\}/);
+});
