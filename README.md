@@ -8,6 +8,25 @@ A honeypot where the attacker's "reverse shell" is an LLM pretending to be bash.
 - Interfaces between workstreams: [`docs/contracts.md`](docs/contracts.md)
 - Akash plan: [`deploy/AKASH_PLAN.md`](deploy/AKASH_PLAN.md)
 
+## The pitch
+
+**Watch someone "hack" a company live — then watch the reveal that none of it was real.**
+
+Classic honeypots are static: a real attacker (or an autonomous AI agent) fingerprints the canned responses in seconds and leaves, and you learn nothing. HoneyStack makes the "reverse shell" a **live LLM playing bash**. It never breaks character, keeps a consistent fake filesystem, feeds tempting dead-ends, and **wastes the attacker's time** while recording every keystroke. A second agent then turns the session into an analyst report — classification, kill-chain, credentials targeted — with every claim linked to the exact command that proves it.
+
+The target is **Hivewell**, a fake Vermont smart-beehive startup. The live demo (~5 min attack, 1 min reveal):
+
+1. **Recon** — `robots.txt` and a careers post point at the engineers' internal `/status` board.
+2. **Token leak** — the page source ships a hard-coded `ADMIN_TOKEN`; `/api/env` dumps fake DB creds.
+3. **Injection** — `{"host":"8.8.8.8; id"}` returns `uid=1000(node)` — "RCE confirmed."
+4. **Reverse shell** — the payload opens a **real TCP connection** to the attacker's own `nc` listener. Nothing about netcat reveals the bytes are AI-generated.
+5. **Post-exploitation** — `cat .env.production`, `psql` (hangs, then times out), `~/.aws/credentials` ("jackpot") — all invented, all consistent.
+6. **Reveal** — flip to the HoneyStack Shield dashboard: live timeline, a "time wasted" counter, and the analyst's kill-chain, each step linked to its evidence.
+
+> *"Every byte they saw was invented. We know who they are and what they were after — and they burned twelve minutes on a machine that doesn't exist."*
+
+**Built on three sponsors, for real:** **Akash** hosts the public trap container · **ClickHouse** stores every HTTP event and shell command · **Guild AI** runs two agents — one plays bash per session, one writes the evidence-linked report.
+
 ## Architecture
 
 ![HoneyStack architecture: attacker to trap (Akash) to control server to Guild and ClickHouse to dashboard](assets/architecture.svg)
