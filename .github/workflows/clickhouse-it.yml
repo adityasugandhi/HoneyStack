@@ -1,8 +1,9 @@
 name: ClickHouse integration test
 
 # Manual only: it hits the real ClickHouse service, so it should not run on
-# every push. Run it from the Actions tab (or `gh workflow run clickhouse-it`).
-# Config: URL + USER are repo variables (not sensitive); PASSWORD is a secret.
+# every push. Run it from the Actions tab or: gh workflow run clickhouse-it.yml --ref <branch>
+# Config: URL + USER are repo variables; PASSWORD is a secret. No reader/admin
+# users required — the reader and db:migrate fall back to CLICKHOUSE_USER.
 on:
   workflow_dispatch:
 
@@ -12,30 +13,35 @@ permissions:
 jobs:
   integration:
     runs-on: ubuntu-latest
+    env:
+      CLICKHOUSE_URL: ${{ vars.CLICKHOUSE_URL }}
+      CLICKHOUSE_USER: ${{ vars.CLICKHOUSE_USER }}
+      CLICKHOUSE_PASSWORD: ${{ secrets.CLICKHOUSE_PASSWORD }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 24 # needs >= 23.6 so .mjs can import the .ts schema
+          node-version: 24
           cache: npm
       - run: npm ci
 
-      # Trim whitespace and fail clearly if a value is missing. Without
-      # CLICKHOUSE_URL the ClickHouse cases skip, and a green-but-skipped run
-      # would be misleading.
-      - name: Resolve ClickHouse config
-        env:
-          CH_URL: ${{ vars.CLICKHOUSE_URL }}
-          CH_USER: ${{ vars.CLICKHOUSE_USER }}
+      - name: Require ClickHouse config
         run: |
-          url=$(printf '%s' "$CH_URL" | tr -d '[:space:]')
-          user=$(printf '%s' "$CH_USER" | tr -d '[:space:]')
-          [ -n "$url" ]  || { echo "::error::CLICKHOUSE_URL variable is empty";  exit 1; }
-          [ -n "$user" ] || { echo "::error::CLICKHOUSE_USER variable is empty"; exit 1; }
-          echo "CLICKHOUSE_URL=$url"   >> "$GITHUB_ENV"
-          echo "CLICKHOUSE_USER=$user" >> "$GITHUB_ENV"
+          url=$(printf '%s' "$CLICKHOUSE_URL" | tr -d '[:space:]')
+          [ -n "$url" ] || { echo "::error::CLICKHOUSE_URL variable is empty"; exit 1; }
+          [ -n "$CLICKHOUSE_USER" ] || { echo "::error::CLICKHOUSE_USER variable is empty"; exit 1; }
+          echo "CLICKHOUSE_URL=$url" >> "$GITHUB_ENV"
 
-      - name: Run tests (including the live ClickHouse round-trip)
-        env:
-          CLICKHOUSE_PASSWORD: ${{ secrets.CLICKHOUSE_PASSWORD }}
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Unit tests (live cases skip here)
         run: npm test
+
+      - name: Apply migrations 001-003
+        run: npx tsx scripts/db-migrate.ts --only 001,002,003
+
+      - name: Live ClickHouse round-trip
+        env:
+          CLICKHOUSE_LIVE_TEST: '1'
+        run: npx tsx --test tests/clickhouse.live.test.ts

@@ -1,15 +1,23 @@
-# Template only. Validate in Akash Console before deploying (spec 12.1).
-# Do NOT put INGEST_TOKEN here: a published SDL is not a secret store.
+# Trap SDL. Validate in Akash Console before deploying (spec 12.1).
+# Secrets stay OUT of git: fill INGEST_TOKEN in the Console SDL editor, not here.
+# Image MUST be linux/amd64 and digest-pinned (build with scripts/build-trap.sh).
 version: "2.0"
 services:
   trap:
-    image: REPLACE_WITH_PINNED_IMAGE
+    image: REPLACE_WITH_PINNED_IMAGE   # ghcr.io/adityasugandhi/honeystack-trap@sha256:<digest>
     env:
       - NODE_ENV=production
       - PORT=3000
-      - DEMO_MODE=true
       - TRAP_INSTANCE_ID=demo-1
-      - INGEST_URL=REPLACE_WITH_HTTPS_INGEST_URL
+      - DEMO_MODE=false
+      # Base URL of the control server behind the HTTPS tunnel (cloudflared).
+      # The trap calls ${CONTROL_URL}/v1/shell/* and /v1/events/batch.
+      - CONTROL_URL=REPLACE_WITH_HTTPS_TUNNEL_URL
+      # Producer token — set in the Console SDL editor only, never committed.
+      - INGEST_TOKEN=REPLACE_IN_CONSOLE
+      # IPv4 the reverse shell may call back to (the attacker's public listener).
+      - CALLBACK_ALLOWLIST=REPLACE_WITH_LISTENER_IPV4
+      - REVSHELL_HOLD_MS=30000
     expose:
       - port: 3000
         as: 80
@@ -30,8 +38,8 @@ profiles:
     demo:
       pricing:
         trap:
-          denom: REPLACE_WITH_VALIDATED_DENOM
-          amount: REPLACE_WITH_APPROVED_MAX_BID
+          denom: uact          # validated by the hello-world deploy
+          amount: 1000
 deployment:
   trap:
     demo:
