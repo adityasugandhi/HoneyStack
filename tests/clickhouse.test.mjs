@@ -70,17 +70,25 @@ test('reaches ClickHouse', { skip: !live }, async () => {
   assert.match(await pingDatabase(), /^\d+\./);
 });
 
-test('getTimeline returns every stored HTTP event, ordered', { skip: !live }, async () => {
+test('getTimeline returns every stored HTTP event, ordered, with D/E columns', { skip: !live }, async () => {
   const got = await getTimeline(SESSION);
   assert.equal(got.length, events.length);
   assert.deepEqual(got.map((r) => r.route), events.map((e) => e.route));
+  // Columns D (timeline) and E (evidence) rely on:
+  for (const key of ['event_id', 'received_at', 'method', 'route', 'planned_status', 'response_template', 'origin_label', 'payload_text']) {
+    assert.ok(key in got[0], `getTimeline row missing ${key}`);
+  }
 });
 
-test('getTurns returns all shell turns in seq order', { skip: !live }, async () => {
+test('getTurns returns all shell turns in seq order, with D columns', { skip: !live }, async () => {
   const got = await getTurns(SESSION);
   assert.equal(got.length, turns.length);
   assert.deepEqual(got.map((r) => Number(r.seq)), [...Array(turns.length).keys()]);
   assert.equal(got.at(-1).command, 'exit');
+  // Columns D's terminal-replay pane relies on:
+  for (const key of ['turn_id', 'seq', 'received_at', 'command', 'output', 'cwd', 'served_by', 'latency_ms']) {
+    assert.ok(key in got[0], `getTurns row missing ${key}`);
+  }
 });
 
 test('countByServedBy aggregates the fixture turns', { skip: !live }, async () => {

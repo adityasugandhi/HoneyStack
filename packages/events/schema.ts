@@ -48,7 +48,9 @@ export const ShellTurn = z.object({
   cwd: z.string(),
   served_by: z.enum(SERVED_BY),
   latency_ms: z.number().int().nonnegative(),
-  origin_label: z.enum(['synthetic_fixture', 'live_demo']),
+  // B (the /v1/shell API) has no reason to send this; C defaults it to
+  // live_demo, the same way it stamps received_at. Fixtures set it explicitly.
+  origin_label: z.enum(['synthetic_fixture', 'live_demo']).default('live_demo'),
   // C2 change (sql/003-shell-guild.sql): '' when Guild did not serve this shell session/turn.
   guild_session_id: z.string().max(64).optional(),
   guild_event_id: z.string().max(64).optional()
