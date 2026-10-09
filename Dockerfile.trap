@@ -4,6 +4,7 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3000
 COPY --chown=node:node apps/trap/server.mjs ./server.mjs
+COPY --chown=node:node apps/trap/shell-connector.mjs ./shell-connector.mjs
 COPY --chown=node:node apps/trap/public ./public
 COPY --chown=node:node packages/trap/response-map.json ./response-map.json
 USER node
