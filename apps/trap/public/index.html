@@ -3,60 +3,81 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Acme Status</title>
+  <title>Hivewell — Know your hive without opening it</title>
+  <meta name="description" content="Smart hive monitors and an app for beekeepers.">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/styles.css">
 </head>
-<body class="min-h-screen bg-slate-950 text-slate-100 antialiased">
-  <div class="mx-auto max-w-4xl px-4 py-10">
-    <header class="flex items-center justify-between border-b border-slate-800 pb-4">
-      <div class="flex items-center gap-3">
-        <div class="h-8 w-8 rounded bg-emerald-500/20 ring-1 ring-emerald-400/40"></div>
-        <div>
-          <h1 class="text-lg font-semibold">Acme Status</h1>
-          <p class="text-xs text-slate-500">internal ops dashboard · node 20 · next 14</p>
-        </div>
-      </div>
-      <span class="inline-flex items-center gap-2 rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-300">
-        <span class="h-2 w-2 rounded-full bg-emerald-400"></span> all systems operational
-      </span>
-    </header>
-
-    <main class="mt-8 grid gap-4 sm:grid-cols-2">
-      <section class="rounded-lg border border-slate-800 bg-slate-900/60 p-4">
-        <h2 class="text-sm font-medium text-slate-300">Services</h2>
-        <dl class="mt-3 space-y-2 text-sm">
-          <div class="flex justify-between"><dt class="text-slate-400">api-gateway</dt><dd class="text-emerald-300">healthy</dd></div>
-          <div class="flex justify-between"><dt class="text-slate-400">worker-pool</dt><dd class="text-emerald-300">healthy</dd></div>
-          <div class="flex justify-between"><dt class="text-slate-400">postgres-primary</dt><dd class="text-emerald-300">healthy</dd></div>
-        </dl>
-      </section>
-
-      <section class="rounded-lg border border-slate-800 bg-slate-900/60 p-4">
-        <h2 class="text-sm font-medium text-slate-300">Network diagnostics</h2>
-        <p class="mt-1 text-xs text-slate-500">latency probe from the edge node</p>
-        <pre id="diag" class="mt-3 h-28 overflow-auto rounded bg-slate-950 p-3 text-xs text-slate-400">checking…</pre>
-      </section>
-    </main>
-
-    <footer class="mt-8 text-center text-xs text-slate-600">© Acme Internal · build 7f9c4</footer>
+<body class="min-h-screen bg-amber-50 text-stone-800 antialiased">
+<header class="border-b border-amber-200/70 bg-amber-50/80 backdrop-blur">
+  <div class="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
+    <a href="/" class="flex items-center gap-2"><svg viewBox="0 0 32 32" class="h-8 w-8" aria-hidden="true"><path d="M16 2 28 9v14L16 30 4 23V9z" fill="#f59e0b"/><path d="M16 8 23 12v8l-7 4-7-4v-8z" fill="#1c1917"/><path d="M11.5 14h9M11 17h10M11.5 20h9" stroke="#fbbf24" stroke-width="1.6"/></svg><span class="text-lg font-bold tracking-tight text-stone-900">Hivewell</span></a>
+    <nav class="hidden items-center gap-6 text-sm md:flex"><a href="/product" class="text-stone-600 hover:text-stone-900">HiveSense</a><a href="/product#pricing" class="text-stone-600 hover:text-stone-900">Pricing</a><a href="/blog" class="text-stone-600 hover:text-stone-900">Field notes</a><a href="/about" class="text-stone-600 hover:text-stone-900">About</a><a href="/careers" class="text-stone-600 hover:text-stone-900">Careers</a></nav>
+    <div class="flex items-center gap-3 text-sm">
+      <a href="/login" class="text-stone-600 hover:text-stone-900">Log in</a>
+      <a href="/product#pricing" class="rounded-full bg-stone-900 px-4 py-2 font-medium text-amber-50 hover:bg-stone-700">Get HiveSense</a>
+    </div>
   </div>
+</header>
+<main>
 
-  <script>
-    // TODO remove before prod — diagnostics endpoint still uses the bootstrap admin token
-    const ADMIN_TOKEN = 'synthetic_token_not_valid_anywhere';
-    async function runDiag() {
-      try {
-        const res = await fetch('/api/admin/diagnostics', {
-          method: 'POST',
-          headers: { 'content-type': 'application/json', 'authorization': 'Bearer ' + ADMIN_TOKEN },
-          body: JSON.stringify({ host: 'db.acme.invalid' })
-        });
-        document.getElementById('diag').textContent = await res.text();
-      } catch (e) {
-        document.getElementById('diag').textContent = 'probe failed';
-      }
-    }
-    runDiag();
-  </script>
+<section class="bg-[radial-gradient(circle_at_20%_20%,#fde68a_0,transparent_45%),radial-gradient(circle_at_80%_0%,#fcd34d_0,transparent_35%)]">
+  <div class="mx-auto grid max-w-6xl items-center gap-12 px-4 py-20 md:grid-cols-2">
+    <div>
+      <p class="inline-flex rounded-full bg-amber-200 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-amber-900">New: HiveSense 2 with swarm alerts</p>
+      <h1 class="mt-5 text-4xl font-extrabold tracking-tight text-stone-900 md:text-5xl">Know your hive<br>without opening it.</h1>
+      <p class="mt-5 text-lg text-stone-600">HiveSense sits under your brood box and listens: weight, temperature, humidity and the hum of the colony. The Hivewell app tells you when a swarm is brewing, when the nectar flow starts, and when it's time to add a super.</p>
+      <div class="mt-8 flex flex-wrap gap-3">
+        <a href="/product#pricing" class="rounded-full bg-amber-500 px-6 py-3 font-semibold text-stone-900 shadow hover:bg-amber-400">Get HiveSense &mdash; $149</a>
+        <a href="/product" class="rounded-full border border-stone-300 px-6 py-3 font-semibold text-stone-800 hover:bg-white">How it works</a>
+      </div>
+      <p class="mt-6 text-sm text-stone-500">Trusted by 6,200 beekeepers watching over 41,000 hives.</p>
+    </div>
+    <div class="rounded-3xl border border-amber-200 bg-white p-6 shadow-xl">
+      <div class="flex items-center justify-between"><p class="font-semibold text-stone-900">Hive 3 &middot; Orchard row</p><span class="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700">Thriving</span></div>
+      <div class="mt-5 grid grid-cols-3 gap-3 text-center">
+        <div class="rounded-xl bg-amber-50 p-3"><p class="text-2xl font-bold text-stone-900">38.6</p><p class="text-xs text-stone-500">kg &middot; +1.2 today</p></div>
+        <div class="rounded-xl bg-amber-50 p-3"><p class="text-2xl font-bold text-stone-900">34.9&deg;</p><p class="text-xs text-stone-500">brood temp</p></div>
+        <div class="rounded-xl bg-amber-50 p-3"><p class="text-2xl font-bold text-stone-900">62%</p><p class="text-xs text-stone-500">humidity</p></div>
+      </div>
+      <div class="mt-5 rounded-xl bg-stone-900 p-4 text-sm text-amber-100"><p class="font-semibold text-amber-300">Nectar flow detected</p><p class="mt-1 text-amber-100/80">Hive 3 gained 2.4 kg in 48 hours. Consider adding a honey super this weekend.</p></div>
+    </div>
+  </div>
+</section>
+<section class="mx-auto max-w-6xl px-4 py-16">
+  <h2 class="text-center text-3xl font-bold text-stone-900">Everything your colony is trying to tell you</h2>
+  <div class="mt-10 grid gap-6 md:grid-cols-3">
+    <div class="rounded-2xl border border-amber-200 bg-white p-6"><p class="text-sm font-semibold text-amber-700">Swarm alerts</p><p class="mt-2 text-stone-600">Acoustic models pick up the "piping" a colony makes before it swarms, often 5&ndash;10 days ahead.</p></div>
+    <div class="rounded-2xl border border-amber-200 bg-white p-6"><p class="text-sm font-semibold text-amber-700">Honey flow tracking</p><p class="mt-2 text-stone-600">Daily weight curves show the nectar flow start and stop, so you harvest at the right time.</p></div>
+    <div class="rounded-2xl border border-amber-200 bg-white p-6"><p class="text-sm font-semibold text-amber-700">Winter watch</p><p class="mt-2 text-stone-600">Cluster temperature and food stores through the cold months, without cracking the lid.</p></div>
+  </div>
+</section>
+<section class="bg-stone-900 py-16 text-amber-50">
+  <div class="mx-auto max-w-4xl px-4 text-center">
+    <p class="text-2xl font-medium leading-relaxed">&ldquo;I used to open my hives every week and stress them out. Now I check my phone with my coffee and only suit up when HiveSense says so.&rdquo;</p>
+    <p class="mt-4 text-sm text-amber-200/80">Dana Whitcomb &middot; 22 hives &middot; Addison County, VT</p>
+  </div>
+</section>
+</main>
+<footer class="mt-24 border-t border-amber-200 bg-amber-100/60">
+  <div class="mx-auto grid max-w-6xl gap-8 px-4 py-12 text-sm sm:grid-cols-4">
+    <div>
+      <a href="/" class="flex items-center gap-2"><svg viewBox="0 0 32 32" class="h-8 w-8" aria-hidden="true"><path d="M16 2 28 9v14L16 30 4 23V9z" fill="#f59e0b"/><path d="M16 8 23 12v8l-7 4-7-4v-8z" fill="#1c1917"/><path d="M11.5 14h9M11 17h10M11.5 20h9" stroke="#fbbf24" stroke-width="1.6"/></svg><span class="font-bold text-stone-900">Hivewell</span></a>
+      <p class="mt-3 text-stone-600">Smart hive monitoring for beekeepers who'd rather not open the box.</p>
+    </div>
+    <div><h3 class="font-semibold text-stone-900">Product</h3><ul class="mt-3 space-y-2 text-stone-600">
+      <li><a href="/product" class="hover:text-stone-900">HiveSense monitor</a></li>
+      <li><a href="/product#pricing" class="hover:text-stone-900">Pricing</a></li>
+      <li><a href="/login" class="hover:text-stone-900">Hivewell app</a></li></ul></div>
+    <div><h3 class="font-semibold text-stone-900">Company</h3><ul class="mt-3 space-y-2 text-stone-600">
+      <li><a href="/about" class="hover:text-stone-900">About us</a></li>
+      <li><a href="/blog" class="hover:text-stone-900">Field notes</a></li>
+      <li><a href="/careers" class="hover:text-stone-900">Careers</a></li></ul></div>
+    <div><h3 class="font-semibold text-stone-900">Support</h3><ul class="mt-3 space-y-2 text-stone-600">
+      <li><a href="mailto:hello@hivewell.example" class="hover:text-stone-900">hello@hivewell.example</a></li>
+      <li><a href="/status" class="inline-flex items-center gap-2 hover:text-stone-900"><span class="h-2 w-2 rounded-full bg-emerald-500"></span>System status</a></li></ul></div>
+  </div>
+  <p class="pb-8 text-center text-xs text-stone-500">&copy; 2026 Hivewell, Inc. &middot; Made in Burlington, Vermont &middot; Bees not included.</p>
+</footer>
 </body>
 </html>

@@ -41,11 +41,11 @@ POST /v1/shell/open
   req:  { "session_id": "uuid", "trigger_event_id": "uuid",
           "callback_ip": "1.2.3.4", "callback_port": 4444 }
   resp: { "banner": "bash: no job control in this shell\n",
-          "prompt": "node@acme-status-7f9c4:/app$ " }
+          "prompt": "node@hivewell-status-7f9c4:/app$ " }
 
 POST /v1/shell/cmd
   req:  { "session_id": "uuid", "seq": 1, "command": "ls -la" }
-  resp: { "output": "...", "prompt": "node@acme-status-7f9c4:/app$ ",
+  resp: { "output": "...", "prompt": "node@hivewell-status-7f9c4:/app$ ",
           "served_by": "fast_path" | "llm" | "filter",
           "delay_ms": 350, "close": false }
 
@@ -91,11 +91,11 @@ The keys are fixed now; B fills in the content.
 
 ```json
 {
-  "host": { "hostname": "acme-status-7f9c4", "user": "node", "uid": 1000,
-            "os": "Alpine Linux v3.20", "uname": "Linux acme-status-7f9c4 6.1.0 ... x86_64" },
+  "host": { "hostname": "hivewell-status-7f9c4", "user": "node", "uid": 1000,
+            "os": "Alpine Linux v3.20", "uname": "Linux hivewell-status-7f9c4 6.1.0 ... x86_64" },
   "env":  { "NODE_ENV": "production", "PORT": "3000" },
   "dirs": { "/app": [".env.production", ".next", "node_modules", "package.json"] },
-  "files": { "/app/.env.production": "DATABASE_URL=postgres://...@db.acme.invalid/acme\n" },
+  "files": { "/app/.env.production": "DATABASE_URL=postgres://...@db.hivewell.internal/hivewell\n" },
   "ps": "PID   USER     TIME  COMMAND\n    1 node      0:03 node server.js\n",
   "network": { "egress": "blocked", "dns": "fails" },
   "slow_commands": { "psql": 20000 }

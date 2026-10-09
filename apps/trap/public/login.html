@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Log in | Hivewell</title>
+  <meta name="description" content="Log in to the Hivewell app.">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body class="min-h-screen bg-amber-50 text-stone-800 antialiased">
+<header class="border-b border-amber-200/70 bg-amber-50/80 backdrop-blur">
+  <div class="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
+    <a href="/" class="flex items-center gap-2"><svg viewBox="0 0 32 32" class="h-8 w-8" aria-hidden="true"><path d="M16 2 28 9v14L16 30 4 23V9z" fill="#f59e0b"/><path d="M16 8 23 12v8l-7 4-7-4v-8z" fill="#1c1917"/><path d="M11.5 14h9M11 17h10M11.5 20h9" stroke="#fbbf24" stroke-width="1.6"/></svg><span class="text-lg font-bold tracking-tight text-stone-900">Hivewell</span></a>
+    <nav class="hidden items-center gap-6 text-sm md:flex"><a href="/product" class="text-stone-600 hover:text-stone-900">HiveSense</a><a href="/product#pricing" class="text-stone-600 hover:text-stone-900">Pricing</a><a href="/blog" class="text-stone-600 hover:text-stone-900">Field notes</a><a href="/about" class="text-stone-600 hover:text-stone-900">About</a><a href="/careers" class="text-stone-600 hover:text-stone-900">Careers</a></nav>
+    <div class="flex items-center gap-3 text-sm">
+      <a href="/login" class="text-stone-600 hover:text-stone-900">Log in</a>
+      <a href="/product#pricing" class="rounded-full bg-stone-900 px-4 py-2 font-medium text-amber-50 hover:bg-stone-700">Get HiveSense</a>
+    </div>
+  </div>
+</header>
+<main>
+
+<section class="mx-auto max-w-md px-4 py-20">
+  <h1 class="text-3xl font-extrabold tracking-tight text-stone-900">Log in to Hivewell</h1>
+  <p class="mt-2 text-stone-600">See your hives, alerts and harvest forecasts.</p>
+  <div class="mt-6 rounded-xl border border-amber-300 bg-amber-100 p-4 text-sm text-amber-900">
+    <p class="font-semibold">Logins are temporarily paused</p>
+    <p class="mt-1">We're migrating accounts to Hivewell Cloud 2. Your hives are still recording. Check <a href="/status" class="font-medium underline">System status</a> for updates.</p>
+  </div>
+  <form class="mt-6 space-y-4 opacity-60" aria-disabled="true" onsubmit="return false">
+    <label class="block text-sm font-medium text-stone-700">Email<input type="email" disabled class="mt-1 w-full rounded-lg border border-stone-300 bg-white px-3 py-2" placeholder="you@example.com"></label>
+    <label class="block text-sm font-medium text-stone-700">Password<input type="password" disabled class="mt-1 w-full rounded-lg border border-stone-300 bg-white px-3 py-2"></label>
+    <button disabled class="w-full rounded-full bg-stone-900 py-2.5 font-semibold text-amber-50">Log in</button>
+  </form>
+</section>
+</main>
+<footer class="mt-24 border-t border-amber-200 bg-amber-100/60">
+  <div class="mx-auto grid max-w-6xl gap-8 px-4 py-12 text-sm sm:grid-cols-4">
+    <div>
+      <a href="/" class="flex items-center gap-2"><svg viewBox="0 0 32 32" class="h-8 w-8" aria-hidden="true"><path d="M16 2 28 9v14L16 30 4 23V9z" fill="#f59e0b"/><path d="M16 8 23 12v8l-7 4-7-4v-8z" fill="#1c1917"/><path d="M11.5 14h9M11 17h10M11.5 20h9" stroke="#fbbf24" stroke-width="1.6"/></svg><span class="font-bold text-stone-900">Hivewell</span></a>
+      <p class="mt-3 text-stone-600">Smart hive monitoring for beekeepers who'd rather not open the box.</p>
+    </div>
+    <div><h3 class="font-semibold text-stone-900">Product</h3><ul class="mt-3 space-y-2 text-stone-600">
+      <li><a href="/product" class="hover:text-stone-900">HiveSense monitor</a></li>
+      <li><a href="/product#pricing" class="hover:text-stone-900">Pricing</a></li>
+      <li><a href="/login" class="hover:text-stone-900">Hivewell app</a></li></ul></div>
+    <div><h3 class="font-semibold text-stone-900">Company</h3><ul class="mt-3 space-y-2 text-stone-600">
+      <li><a href="/about" class="hover:text-stone-900">About us</a></li>
+      <li><a href="/blog" class="hover:text-stone-900">Field notes</a></li>
+      <li><a href="/careers" class="hover:text-stone-900">Careers</a></li></ul></div>
+    <div><h3 class="font-semibold text-stone-900">Support</h3><ul class="mt-3 space-y-2 text-stone-600">
+      <li><a href="mailto:hello@hivewell.example" class="hover:text-stone-900">hello@hivewell.example</a></li>
+      <li><a href="/status" class="inline-flex items-center gap-2 hover:text-stone-900"><span class="h-2 w-2 rounded-full bg-emerald-500"></span>System status</a></li></ul></div>
+  </div>
+  <p class="pb-8 text-center text-xs text-stone-500">&copy; 2026 Hivewell, Inc. &middot; Made in Burlington, Vermont &middot; Bees not included.</p>
+</footer>
+</body>
+</html>
