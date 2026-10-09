@@ -1,0 +1,17 @@
+-- Run once by hand in the ClickHouse Cloud SQL console as admin (default).
+-- Placeholders only — real passwords go in .env, never here. Never run by db:migrate.
+-- Cloud requires 12+ char passwords with mixed case and digits/symbols.
+
+CREATE ROLE IF NOT EXISTS honeystack_writer_role;
+GRANT INSERT ON honeypot.events      TO honeystack_writer_role;
+GRANT INSERT ON honeypot.shell_turns TO honeystack_writer_role;
+GRANT INSERT ON honeypot.analyses    TO honeystack_writer_role;   -- only if 004 is approved
+
+CREATE ROLE IF NOT EXISTS honeystack_reader_role;
+GRANT SELECT ON honeypot.* TO honeystack_reader_role;
+
+CREATE USER IF NOT EXISTS honeystack_writer IDENTIFIED WITH sha256_password BY '<writer password>';
+CREATE USER IF NOT EXISTS honeystack_reader IDENTIFIED WITH sha256_password BY '<reader password>';
+GRANT honeystack_writer_role TO honeystack_writer;
+GRANT honeystack_reader_role TO honeystack_reader;
+-- Do NOT set readonly=1 on the reader: it blocks the per-query date_time_output_format setting.

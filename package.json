@@ -14,10 +14,10 @@
     "typecheck": "tsc --noEmit",
     "docker:build": "sh scripts/build-trap.sh",
     "smoke": "sh scripts/smoke.sh",
-    "db:migrate": "node --env-file-if-exists=.env scripts/migrate.mjs",
-    "db:ping": "node --env-file-if-exists=.env scripts/ping.mjs",
-    "demo:seed": "node --env-file-if-exists=.env scripts/load-fixture.mjs",
-    "make:fixture": "node scripts/make-fixture.mjs"
+    "db:migrate": "tsx --env-file-if-exists=.env scripts/db-migrate.ts",
+    "make:fixture": "node scripts/make-fixture.mjs",
+    "db:load-fixture": "tsx --env-file-if-exists=.env scripts/load-fixture.ts",
+    "test:live": "CLICKHOUSE_LIVE_TEST=1 tsx --env-file=.env --test tests/clickhouse.live.test.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.133.0",
