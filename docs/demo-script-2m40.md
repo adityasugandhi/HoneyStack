@@ -7,9 +7,10 @@
 ## Before going on stage
 
 - Open the Hivewell Status page and the attacker terminal side by side.
-- Start the netcat listener before the timer begins.
+- Start the netcat listener before the timer begins, and confirm its public IP is in the trap's `CALLBACK_ALLOWLIST` — otherwise the reverse-shell callback is blocked (logged as `revshell-blocked`) and never dials.
+- **Pre-flight check:** the control server's `/health` returns `{"clickhouse":true}`, and the Akash trap's bait routes return `200` (not `503`). A `503` means the trap can't reach the control server — wire `CONTROL_URL` / `INGEST_TOKEN` in the SDL before going live.
 - Put the longer `curl` commands in terminal history so they can be recalled with the up arrow.
-- Open HoneyStack Shield in another tab with the session list ready.
+- Open HoneyStack Shield in another tab with the session list ready. Don't restart the control server after recording — live analyses are in memory until the `analyses` table ships.
 - Have a completed Guild analysis available as a fallback in case live analysis takes longer than expected.
 
 ## 0:00–0:38 — Hook
