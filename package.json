@@ -1,21 +1,33 @@
 {
   "name": "honeystack",
+  "version": "0.1.0",
   "private": true,
   "type": "module",
   "scripts": {
-    "dev:shell": "tsx --env-file-if-exists=.env scripts/dev-control.ts",
+    "dev:trap": "node apps/trap/server.mjs",
+    "dev:control": "tsx --env-file-if-exists=.env apps/control/server.ts",
+    "dev:shell": "npm run dev:control",
     "shell:repl": "tsx --env-file-if-exists=.env scripts/shell-repl.ts",
-    "test": "tsx --test tests/*.test.ts",
+    "analyze": "tsx --env-file-if-exists=.env scripts/analyze.ts",
+    "build:css": "tailwindcss -c tailwind.config.cjs -i apps/trap/styles.src.css -o apps/trap/public/styles.css --minify",
+    "test": "node --test tests/*.test.mjs && tsx --test tests/*.test.ts",
     "typecheck": "tsc --noEmit",
-    "analyze": "tsx --env-file-if-exists=.env scripts/analyze.ts"
+    "docker:build": "sh scripts/build-trap.sh",
+    "smoke": "sh scripts/smoke.sh",
+    "db:migrate": "node --env-file-if-exists=.env scripts/migrate.mjs",
+    "db:ping": "node --env-file-if-exists=.env scripts/ping.mjs",
+    "demo:seed": "node --env-file-if-exists=.env scripts/load-fixture.mjs",
+    "make:fixture": "node scripts/make-fixture.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.133.0",
+    "@clickhouse/client": "^1.24.1",
     "fastify": "^5.12.5",
     "zod": "^4.6.5"
   },
   "devDependencies": {
     "@types/node": "^26.6.5",
+    "tailwindcss": "3.4.17",
     "tsx": "^4.23.15",
     "typescript": "^7.0.2"
   }

@@ -28,7 +28,7 @@ import { registerAnalysisRoutes } from './guild';      // E
 import { registerDashboard } from '../dashboard/serve'; // D
 ```
 
-Each module exports its `register*Routes(app)` function. Pick one HTTP framework at kickoff (suggestion: Fastify) and write it here: **Framework: ________**
+**Framework: Fastify** (`apps/control/server.ts`, run with `npm run dev:control`). B and E export `register*Routes(app)`; C's `apps/control/ingest.mjs` stays a plain Node request listener, and `server.ts` routes `/v1/events/batch` to it. Without `CLICKHOUSE_URL`, events and shell turns go to `data/*.jsonl` (dev mode).
 
 Ports: trap `3000`, control server `8080`.
 

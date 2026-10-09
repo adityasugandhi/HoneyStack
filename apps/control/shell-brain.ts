@@ -156,7 +156,8 @@ export class ShellBrain {
       turnSink(row).catch((err) => console.error('[shell-brain] failed to record turn:', err));
     }
 
-    return { output, prompt: this.prompt(s), served_by: servedBy, delay_ms: delayMs, close };
+    // No prompt after exit: the trap writes output + prompt, then hangs up.
+    return { output, prompt: close ? '' : this.prompt(s), served_by: servedBy, delay_ms: delayMs, close };
   }
 }
 

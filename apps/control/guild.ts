@@ -31,6 +31,7 @@ export type EvidenceLoader = (sessionId: string) => Promise<Evidence>;
 
 const FIXTURE = path.resolve('tests/fixtures/demo-session.jsonl');
 const LOCAL_TURNS = process.env.SHELL_TURNS_FILE || path.resolve('data/shell_turns.jsonl');
+const LOCAL_EVENTS = process.env.HTTP_EVENTS_FILE || path.resolve('data/events.jsonl');
 
 function readJsonl(file: string): Record<string, unknown>[] {
   if (!existsSync(file)) return [];
@@ -40,7 +41,8 @@ function readJsonl(file: string): Record<string, unknown>[] {
 }
 
 export const fileEvidenceLoader: EvidenceLoader = async (sessionId) => {
-  const all: Record<string, unknown>[] = [...readJsonl(FIXTURE), ...readJsonl(LOCAL_TURNS).map((r) => ({ kind: 'turn', ...r }))];
+  const all: Record<string, unknown>[] = [...readJsonl(FIXTURE), ...readJsonl(LOCAL_TURNS).map((r) => ({ kind: 'turn', ...r })),
+    ...readJsonl(LOCAL_EVENTS).map((r) => ({ kind: 'event', ...r }))];
   const rows = all.filter((r) => r.session_id === sessionId);
   const turns = rows.filter((r) => r.kind === 'turn') as unknown as EvidenceTurn[];
   const events = rows.filter((r) => r.kind === 'event') as unknown as EvidenceEvent[];

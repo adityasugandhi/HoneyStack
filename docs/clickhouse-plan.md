@@ -514,8 +514,8 @@ set -a; source .env; set +a
    `chq "SELECT name, engine FROM system.tables WHERE database = 'honeypot' FORMAT PrettyCompact"`
 2. **Grants:** `npm run test:live`. The writer can't SELECT and the reader can't INSERT.
 3. **Fixture:** `npm run db:load-fixture -- --rebase-now`, then
-   `chq "SELECT uniqExact(event_id) FROM events WHERE session_id = '5e55a1e0-7c3d-4b8e-9f21-6a0d3c9e4b17'"` → `6`
-   `chq "SELECT uniqExact(turn_id), dateDiff('second', min(received_at), max(received_at)) FROM shell_turns WHERE session_id = '5e55a1e0-7c3d-4b8e-9f21-6a0d3c9e4b17'"` → `18`, plus a non-zero span
+   `chq "SELECT uniqExact(event_id) FROM events WHERE session_id = '<fixture session id>'"` → the fixture's event count
+   `chq "SELECT uniqExact(turn_id), dateDiff('second', min(received_at), max(received_at)) FROM shell_turns WHERE session_id = '<fixture session id>'"` → the fixture's turn count, plus a non-zero span
 4. **Shell turns, live:** terminal 1 `npm run dev:control`; terminal 2 `npm run shell:repl`. Type `id`, `ls -la`, `cat /app/.env.production`, `netstat -tlnp`. Then
    `chq "SELECT seq, served_by, command, latency_ms FROM shell_turns ORDER BY received_at DESC LIMIT 5 FORMAT PrettyCompact"`.
    You should see a mix of `fast_path` and `llm` (or `guild`), and `guild_session_id` filled after 003 + B's change.
@@ -525,7 +525,7 @@ set -a; source .env; set +a
      -d '{"events":[{"event_id":"'$(uuidgen | tr A-Z a-z)'","session_id":"'$(uuidgen | tr A-Z a-z)'","observed_at":"2026-10-09T18:00:00.000Z","trap_instance_id":"demo-1","method":"GET","route":"/","payload_text":"","payload_bytes":0,"response_template":"home-page","planned_status":200}]}'
    # → 200 {"accepted":["…"]}; same call without the header → 401; "events":[] → 400
    ```
-6. **Analyst from ClickHouse:** with `dev:control` running, `npm run analyze -- <session id from step 4>`. Expect `state: complete`, a `guild_session_url`, and evidence IDs that match `turn_id`s in `shell_turns`. Then `npm run analyze -- 5e55a1e0-7c3d-4b8e-9f21-6a0d3c9e4b17` for the fixture.
+6. **Analyst from ClickHouse:** with `dev:control` running, `npm run analyze -- <session id from step 4>`. Expect `state: complete`, a `guild_session_url`, and evidence IDs that match `turn_id`s in `shell_turns`. Then `npm run analyze` (no argument) for the fixture.
 7. **Failure path:** set `CLICKHOUSE_URL` to a bad host and restart. Step 5 → `503`, and the REPL keeps answering (turn-insert errors are only logged).
 8. **End to end (checkpoint 3/4):** run the full attack from `llm-shell-demo.md` §1 against the trap. `listSessions()` shows one session with HTTP events **and** turns under the same `session_id`.
 

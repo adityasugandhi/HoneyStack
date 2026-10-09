@@ -1,11 +1,14 @@
+import { readFileSync } from 'node:fs';
+
 // Run a Guild analysis for one session through the control server and print the result:
-//   npm run analyze -- 5e55a1e0-7c3d-4b8e-9f21-6a0d3c9e4b17
+//   npm run analyze -- <session_id>
 const base = process.env.CONTROL_URL || 'http://127.0.0.1:8080';
 const headers = {
   'content-type': 'application/json',
   ...(process.env.CONTROL_TOKEN ? { authorization: `Bearer ${process.env.CONTROL_TOKEN}` } : {}),
 };
-const sessionId = process.argv[2] ?? '5e55a1e0-7c3d-4b8e-9f21-6a0d3c9e4b17';
+// Default: the demo session in the shared fixture.
+const sessionId = process.argv[2] || JSON.parse(readFileSync('tests/fixtures/demo-session.jsonl', 'utf8').split('\n')[0]).session_id;
 
 const start = await fetch(`${base}/v1/analyze`, { method: 'POST', headers, body: JSON.stringify({ session_id: sessionId }) });
 let job = await start.json();
@@ -20,4 +23,3 @@ console.error('');
 console.log(JSON.stringify(job, null, 2));
 process.exit(job.state === 'complete' ? 0 : 1);
 
-export {};

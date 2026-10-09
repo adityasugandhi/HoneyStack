@@ -380,7 +380,7 @@ const ping: Handler = (args, { world }) => {
 };
 
 const psql: Handler = (_args, { world }) => ({
-  out: `psql: error: connection to server at "db.acme.invalid" (${world.network.internal_hosts['db.acme.invalid']}), port 5432 failed: Connection timed out\n\tIs the server running on that host and accepting TCP/IP connections?\n`,
+  out: `psql: error: connection to server at "db.invalid" (${world.network.internal_hosts['db.invalid']}), port 5432 failed: Connection timed out\n\tIs the server running on that host and accepting TCP/IP connections?\n`,
   status: 2,
   delayMs: world.slow_commands.psql ?? 20000,
 });

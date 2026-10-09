@@ -1,0 +1,39 @@
+# Template only. Validate in Akash Console before deploying (spec 12.1).
+# Do NOT put INGEST_TOKEN here: a published SDL is not a secret store.
+version: "2.0"
+services:
+  trap:
+    image: REPLACE_WITH_PINNED_IMAGE
+    env:
+      - NODE_ENV=production
+      - PORT=3000
+      - DEMO_MODE=true
+      - TRAP_INSTANCE_ID=demo-1
+      - INGEST_URL=REPLACE_WITH_HTTPS_INGEST_URL
+    expose:
+      - port: 3000
+        as: 80
+        proto: tcp
+        to:
+          - global: true
+profiles:
+  compute:
+    trap:
+      resources:
+        cpu:
+          units: 0.5
+        memory:
+          size: 512Mi
+        storage:
+          size: 512Mi
+  placement:
+    demo:
+      pricing:
+        trap:
+          denom: REPLACE_WITH_VALIDATED_DENOM
+          amount: REPLACE_WITH_APPROVED_MAX_BID
+deployment:
+  trap:
+    demo:
+      profile: trap
+      count: 1
