@@ -126,7 +126,7 @@ uid=1000(node) gid=1000(node) groups=1000(node)
 *Second terminal:*
 
 ```
-$ nc -lvnp 4444
+$ nc -lvnp 4444        # on macOS: nc -lv 4444
 listening on [any] 4444 ...
 ```
 
