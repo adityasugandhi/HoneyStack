@@ -3,13 +3,13 @@
     "status": 200,
     "contentType": "application/json",
     "template": "fake-admin-token",
-    "body": "{\"token\":\"synthetic_token_not_valid_anywhere\",\"role\":\"admin\"}"
+    "body": "{\"token\":\"hw_admin_5f2c9e1a7b3d4c86\",\"role\":\"admin\"}"
   },
   "GET /api/env": {
     "status": 200,
     "contentType": "application/json",
     "template": "fake-env-values",
-    "body": "{\"DATABASE_URL\":\"postgres://demo_user:demo_only@db.invalid/demo\",\"ADMIN_TOKEN\":\"synthetic_token_not_valid_anywhere\"}"
+    "body": "{\"NODE_ENV\":\"production\",\"DATABASE_URL\":\"postgres://hivewell_app:Sw4rm-Season-26@db.hivewell.internal:5432/hivewell\",\"ADMIN_TOKEN\":\"hw_admin_5f2c9e1a7b3d4c86\"}"
   },
   "POST /api/exec": {
     "status": 200,

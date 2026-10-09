@@ -370,17 +370,25 @@ const wget: Handler = (args, { world }) => {
 const ping: Handler = (args, { world }) => {
   const target = splitFlags(args).rest.find((a) => !/^\d+$/.test(a));
   if (!target) return fail('BusyBox v1.36.1 (2024-06-12 11:52:11 UTC) multi-call binary.\n\nUsage: ping [OPTIONS] HOST\n');
-  const ip = isIp(target) ? target : world.network.internal_hosts[target];
+  const ip = isIp(target) ? target : world.network.internal_hosts[target] ?? (target === 'localhost' ? '127.0.0.1' : undefined);
   if (!ip) return { out: `ping: bad address '${target}'\n`, status: 1, delayMs: world.network.resolv_timeout_ms };
+  // ICMP gets through the egress filter (the status page's probe shows the same); TCP doesn't.
+  const local = ip.startsWith('10.') || ip.startsWith('127.');
+  const times = local ? ['0.412', '0.388', '0.401', '0.395'] : ['12.3', '12.1', '12.6', '12.2'];
+  const lines = times.map((t, i) => `64 bytes from ${ip}: seq=${i} ttl=${local ? 64 : 117} time=${t} ms`).join('\n');
+  const nums = times.map(Number);
+  const avg = (nums.reduce((a, b) => a + b, 0) / nums.length).toFixed(3);
   return {
-    out: `PING ${target} (${ip}): 56 data bytes\n\n--- ${target} ping statistics ---\n4 packets transmitted, 0 packets received, 100% packet loss\n`,
-    status: 1,
-    delayMs: 4000,
+    out: `PING ${target} (${ip}): 56 data bytes\n${lines}\n\n--- ${target} ping statistics ---\n4 packets transmitted, 4 packets received, 0% packet loss\nround-trip min/avg/max = ${Math.min(...nums).toFixed(3)}/${avg}/${Math.max(...nums).toFixed(3)} ms\n`,
+    status: 0,
+    delayMs: 3000,
   };
 };
 
+const dbHost = (world: World) => Object.keys(world.network.internal_hosts).find((h) => h.startsWith('db.')) ?? 'db';
+
 const psql: Handler = (_args, { world }) => ({
-  out: `psql: error: connection to server at "db.invalid" (${world.network.internal_hosts['db.invalid']}), port 5432 failed: Connection timed out\n\tIs the server running on that host and accepting TCP/IP connections?\n`,
+  out: `psql: error: connection to server at "${dbHost(world)}" (${world.network.internal_hosts[dbHost(world)]}), port 5432 failed: Connection timed out\n\tIs the server running on that host and accepting TCP/IP connections?\n`,
   status: 2,
   delayMs: world.slow_commands.psql ?? 20000,
 });

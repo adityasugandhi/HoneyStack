@@ -21,11 +21,23 @@ const MAX_TEXT_CHARS = 2048;
 // Single source of truth for the "leaked" synthetic admin token.
 const ADMIN_TOKEN = (() => {
   try { return JSON.parse(RESPONSE_MAP['GET /api/env'].body).ADMIN_TOKEN; }
-  catch { return 'synthetic_token_not_valid_anywhere'; }
+  catch { return 'hw_admin_5f2c9e1a7b3d4c86'; }
 })();
 
+const HTML = 'text/html; charset=utf-8';
+// `log: true` pages are recorded as best-effort page-view events (recon), without
+// blocking the response on the control server.
 const STATIC = {
-  '/': { file: 'index.html', type: 'text/html; charset=utf-8' },
+  '/': { file: 'index.html', type: HTML, log: true },
+  '/product': { file: 'product.html', type: HTML, log: true },
+  '/about': { file: 'about.html', type: HTML, log: true },
+  '/blog': { file: 'blog.html', type: HTML, log: true },
+  '/careers': { file: 'careers.html', type: HTML, log: true },
+  '/login': { file: 'login.html', type: HTML, log: true },
+  '/status': { file: 'status.html', type: HTML, log: true },
+  '/robots.txt': { file: 'robots.txt', type: 'text/plain; charset=utf-8', log: true },
+  '/sitemap.xml': { file: 'sitemap.xml', type: 'application/xml; charset=utf-8' },
+  '/favicon.svg': { file: 'favicon.svg', type: 'image/svg+xml' },
   '/styles.css': { file: 'styles.css', type: 'text/css; charset=utf-8' }
 };
 
@@ -116,13 +128,24 @@ export function detectReverseShell(text) {
   return null;
 }
 
+// Hosts the diagnostics probe can resolve, matching packages/shell/world.json (internal_hosts).
+const INTERNAL_HOSTS = {
+  'db.hivewell.internal': '10.42.3.12',
+  'cache.hivewell.internal': '10.42.3.20',
+  'localhost': '127.0.0.1'
+};
+
 function cannedPing(host) {
   const safe = String(host).slice(0, 80).replace(/[^\w.\-]/g, '');
-  return `PING ${safe} (203.0.113.7): 56 data bytes\n` +
-    `64 bytes from 203.0.113.7: icmp_seq=0 ttl=117 time=12.3 ms\n\n` +
+  const ip = new RegExp(`^${IPV4}$`).test(safe) ? safe : INTERNAL_HOSTS[safe];
+  // External names don't resolve from this box (no public DNS), same as in the fake shell.
+  if (!ip) return `ping: bad address '${safe}'\n`;
+  const ms = ip.startsWith('10.') || ip.startsWith('127.') ? 0.4 : 12.3;
+  return `PING ${safe} (${ip}): 56 data bytes\n` +
+    `64 bytes from ${ip}: seq=0 ttl=${ms < 1 ? 64 : 117} time=${ms} ms\n\n` +
     `--- ${safe} ping statistics ---\n` +
-    `1 packets transmitted, 1 packets received, 0.0% packet loss\n` +
-    `round-trip min/avg/max/stddev = 12.3/12.3/12.3/0.0 ms\n`;
+    `1 packets transmitted, 1 packets received, 0% packet loss\n` +
+    `round-trip min/avg/max = ${ms}/${ms}/${ms} ms\n`;
 }
 
 // ---- control-server calls ----
@@ -263,9 +286,18 @@ export function createTrap(env = process.env) {
       return send(res, 200, 'application/json', '{"status":"ok"}');
     }
     if (req.method === 'GET' && STATIC[route]) {
-      const { file, type } = STATIC[route];
+      const { file, type, log } = STATIC[route];
       const p = path.join(PUBLIC_DIR, file);
-      return existsSync(p) ? send(res, 200, type, readFileSync(p)) : send(res, 404, 'text/plain', 'not found');
+      if (!existsSync(p)) return send(res, 404, 'text/plain', 'not found');
+      if (log) {
+        const event = makeEvent({
+          sessionId: sessionFor(req), method: 'GET', route, payloadText: '', payloadBytes: 0,
+          template: route === '/status' ? 'status-page' : route === '/robots.txt' ? 'robots' : 'page-view',
+          status: 200, instanceId
+        });
+        submitEvent(event, env).catch(() => {}); // best effort: never block a page on capture
+      }
+      return send(res, 200, type, readFileSync(p));
     }
 
     if (req.method === 'POST' && route === '/api/admin/diagnostics') {

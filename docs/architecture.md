@@ -12,7 +12,7 @@ flowchart LR
   end
 
   subgraph AK["Akash"]
-    T["Trap<br/>apps/trap/server.mjs<br/>fake Acme Status app"]
+    T["Trap<br/>apps/trap/server.mjs<br/>fake Hivewell Status app"]
   end
 
   subgraph CS["Control server :8080 (apps/control/server.ts)"]
@@ -76,7 +76,7 @@ sequenceDiagram
   C->>G: start session + machine description
   G-->>C: READY
   T->>L: TCP connect (allowlisted IP)
-  T-->>L: bash banner + node@acme-status-7f9c4:/app$
+  T-->>L: bash banner + node@hivewell-status-7f9c4:/app$
 
   loop every command
     L->>T: command (e.g. find / -perm -4000)

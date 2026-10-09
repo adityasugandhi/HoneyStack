@@ -6,7 +6,7 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { createTrap } from '../apps/trap/server.mjs';
 
 const SID = '00000000-0000-4000-8000-000000000001';
-const ADMIN_TOKEN = 'synthetic_token_not_valid_anywhere';
+const ADMIN_TOKEN = 'hw_admin_5f2c9e1a7b3d4c86';
 
 let control, trap, base;
 let received = [];
@@ -33,10 +33,10 @@ before(async () => {
       }
       if (req.url === '/v1/shell/open') {
         shellOpens.push(body);
-        res.writeHead(200); return res.end(JSON.stringify({ banner: 'bash: no job control in this shell\n', prompt: 'node@acme-status-7f9c4:/app$ ' }));
+        res.writeHead(200); return res.end(JSON.stringify({ banner: 'bash: no job control in this shell\n', prompt: 'node@hivewell-status-7f9c4:/app$ ' }));
       }
       if (req.url === '/v1/shell/cmd') {
-        res.writeHead(200); return res.end(JSON.stringify({ output: 'ok\n', prompt: 'node@acme-status-7f9c4:/app$ ', served_by: 'llm', delay_ms: 0, close: false }));
+        res.writeHead(200); return res.end(JSON.stringify({ output: 'ok\n', prompt: 'node@hivewell-status-7f9c4:/app$ ', served_by: 'llm', delay_ms: 0, close: false }));
       }
       res.writeHead(404); res.end();
     });
@@ -72,7 +72,7 @@ test('three bait requests give three distinct events', async () => {
 test('env route returns synthetic values only', async () => {
   process.env.DATABASE_URL = 'postgres://real:real@real/real';
   const t = await (await fetch(base + '/api/env')).text();
-  assert.match(t, /db\.invalid/);
+  assert.match(t, /db\.hivewell\.internal/);   // reserved .internal name, never the real env
   assert.doesNotMatch(t, /real:real/);
   delete process.env.DATABASE_URL;
 });
@@ -112,16 +112,16 @@ test('unknown path and wrong method get controlled 404', async () => {
 
 test('diagnostics without the admin token is 401', async () => {
   received = [];
-  const r = await post('/api/admin/diagnostics', '{"host":"db.acme.invalid"}');
+  const r = await post('/api/admin/diagnostics', '{"host":"db.hivewell.internal"}');
   assert.equal(r.status, 401);
   assert.equal(received[0].response_template, 'diag-unauthorized');
 });
 
 test('diagnostics with token returns canned ping for a plain host', async () => {
   received = [];
-  const r = await post('/api/admin/diagnostics', '{"host":"db.acme.invalid"}', { authorization: `Bearer ${ADMIN_TOKEN}` });
+  const r = await post('/api/admin/diagnostics', '{"host":"db.hivewell.internal"}', { authorization: `Bearer ${ADMIN_TOKEN}` });
   const t = await r.text();
-  assert.match(t, /PING db\.acme\.invalid/);
+  assert.match(t, /PING db\.hivewell\.internal/);
   assert.match(t, /1 packets transmitted/);
   assert.equal(received[0].response_template, 'diag-ping');
 });
@@ -129,9 +129,9 @@ test('diagnostics with token returns canned ping for a plain host', async () => 
 test('injected command is relayed to the shell brain, not executed', async () => {
   received = [];
   oneshotCalls = [];
-  const r = await post('/api/admin/diagnostics', '{"host":"db.acme.invalid; id"}', { authorization: `Bearer ${ADMIN_TOKEN}` });
+  const r = await post('/api/admin/diagnostics', '{"host":"db.hivewell.internal; id"}', { authorization: `Bearer ${ADMIN_TOKEN}` });
   const t = await r.text();
-  assert.match(t, /PING db\.acme\.invalid/);      // first part still pings
+  assert.match(t, /PING db\.hivewell\.internal/);      // first part still pings
   assert.match(t, /uid=1000/);                    // extra command came from the brain
   assert.equal(oneshotCalls.length, 1);
   assert.equal(oneshotCalls[0].command, 'id');
@@ -178,4 +178,36 @@ test('no code-execution primitives in apps/trap source', () => {
       assert.ok(!re.test(src), `${f} must not contain ${re}`);
     }
   }
+});
+
+test('company site pages are served and the footer links to the exposed status page', async () => {
+  for (const route of ['/', '/product', '/about', '/blog', '/careers', '/login', '/status', '/robots.txt', '/sitemap.xml', '/favicon.svg']) {
+    assert.equal((await fetch(base + route)).status, 200, route);
+  }
+  const home = await (await fetch(base + '/')).text();
+  assert.match(home, /href="\/status"/);                  // the bridge: "System status" in the footer
+  const status = await (await fetch(base + '/status')).text();
+  assert.match(status, /internal ops dashboard/);
+  assert.match(status, new RegExp(ADMIN_TOKEN));           // the leaked token lives on the status page
+  assert.match(await (await fetch(base + '/robots.txt')).text(), /Disallow: \/status/);
+});
+
+test('page views are logged as recon events without blocking the page', async () => {
+  received = [];
+  await fetch(base + '/careers');
+  await fetch(base + '/status');
+  await new Promise((r) => setTimeout(r, 100));
+  const templates = received.map((e) => e.response_template);
+  assert.ok(templates.includes('page-view'));
+  assert.ok(templates.includes('status-page'));
+  eventsStatus = 503;                                       // capture down: pages still load
+  assert.equal((await fetch(base + '/about')).status, 200);
+  eventsStatus = 200;
+});
+
+test('diagnostics ping shows the real target IP and fails for public names', async () => {
+  const ip = await (await post('/api/admin/diagnostics', '{"host":"8.8.8.8"}', { authorization: `Bearer ${ADMIN_TOKEN}` })).text();
+  assert.match(ip, /PING 8\.8\.8\.8 \(8\.8\.8\.8\)/);
+  const name = await (await post('/api/admin/diagnostics', '{"host":"example.com"}', { authorization: `Bearer ${ADMIN_TOKEN}` })).text();
+  assert.match(name, /bad address 'example\.com'/);
 });

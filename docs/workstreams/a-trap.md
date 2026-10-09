@@ -17,7 +17,7 @@ Run a 20-line stub control server on port 8080 that implements C1 by returning `
 
 ## Tasks
 - [ ] Node built-ins only (`http`, `net`, `crypto`); no npm dependencies in the trap.
-- [ ] Fake "Acme Status" page in `public/index.html`: looks like a Next.js ops dashboard. Its source has a `// TODO remove before prod` comment and a `fetch('/api/admin/diagnostics', ...)` call.
+- [ ] Fake "Hivewell Status" page in `public/status.html` (linked as "System status" from the Hivewell marketing site): looks like a Next.js ops dashboard. Its source has a `// TODO remove before prod` comment and a `fetch('/api/admin/diagnostics', ...)` call.
 - [ ] Bait routes `/api/login`, `/api/env` (leaks `ADMIN_TOKEN=synthetic_...`), and `/api/exec` per §5.1.
 - [ ] `POST /api/admin/diagnostics {"host": "..."}` (requires the leaked token): for a plain host, return canned `ping -c 1` output.
 - [ ] Injection detector: split `host` on `;`, `|`, `&&`, `||`, `$(`, and backticks. The first part gets ping output; each extra command goes to `/v1/shell/oneshot`; concatenate the outputs.

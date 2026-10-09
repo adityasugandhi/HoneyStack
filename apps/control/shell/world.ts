@@ -16,7 +16,7 @@ export interface World {
   sudo_backup_output: string;
   ps: string;
   network: {
-    egress: string; dns: string; resolv_timeout_ms: number; connect_timeout_ms: number;
+    egress: string; dns: string; icmp?: string; resolv_timeout_ms: number; connect_timeout_ms: number;
     internal_hosts: Record<string, string>;
   };
   slow_commands: Record<string, number>;
