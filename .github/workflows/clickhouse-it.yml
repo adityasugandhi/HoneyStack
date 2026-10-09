@@ -13,10 +13,6 @@ permissions:
 jobs:
   integration:
     runs-on: ubuntu-latest
-    env:
-      CLICKHOUSE_URL: ${{ vars.CLICKHOUSE_URL }}
-      CLICKHOUSE_USER: ${{ vars.CLICKHOUSE_USER }}
-      CLICKHOUSE_PASSWORD: ${{ secrets.CLICKHOUSE_PASSWORD }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -25,23 +21,34 @@ jobs:
           cache: npm
       - run: npm ci
 
-      - name: Require ClickHouse config
-        run: |
-          url=$(printf '%s' "$CLICKHOUSE_URL" | tr -d '[:space:]')
-          [ -n "$url" ] || { echo "::error::CLICKHOUSE_URL variable is empty"; exit 1; }
-          [ -n "$CLICKHOUSE_USER" ] || { echo "::error::CLICKHOUSE_USER variable is empty"; exit 1; }
-          echo "CLICKHOUSE_URL=$url" >> "$GITHUB_ENV"
-
       - name: Typecheck
         run: npm run typecheck
 
+      # Runs with NO CLICKHOUSE_* in the environment, so the file-adapter /
+      # "clickhouseConfigured() === false" paths behave as they do locally.
+      # The live ClickHouse cases skip here (gated by CLICKHOUSE_LIVE_TEST).
       - name: Unit tests (live cases skip here)
         run: npm test
 
+      # Only the steps below get the ClickHouse config.
+      - name: Resolve ClickHouse config
+        env:
+          CH_URL: ${{ vars.CLICKHOUSE_URL }}
+          CH_USER: ${{ vars.CLICKHOUSE_USER }}
+        run: |
+          url=$(printf '%s' "$CH_URL" | tr -d '[:space:]')
+          [ -n "$url" ] || { echo "::error::CLICKHOUSE_URL variable is empty"; exit 1; }
+          [ -n "$CH_USER" ] || { echo "::error::CLICKHOUSE_USER variable is empty"; exit 1; }
+          echo "CLICKHOUSE_URL=$url" >> "$GITHUB_ENV"
+          echo "CLICKHOUSE_USER=$CH_USER" >> "$GITHUB_ENV"
+
       - name: Apply migrations 001-003
+        env:
+          CLICKHOUSE_PASSWORD: ${{ secrets.CLICKHOUSE_PASSWORD }}
         run: npx tsx scripts/db-migrate.ts --only 001,002,003
 
       - name: Live ClickHouse round-trip
         env:
+          CLICKHOUSE_PASSWORD: ${{ secrets.CLICKHOUSE_PASSWORD }}
           CLICKHOUSE_LIVE_TEST: '1'
         run: npx tsx --test tests/clickhouse.live.test.ts
