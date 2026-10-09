@@ -10,63 +10,44 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build-push:
+  build-trap:
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
-    strategy:
-      matrix:
-        include:
-          - name: trap
-            dockerfile: Dockerfile.trap
-            css: "true"
-          - name: control
-            dockerfile: Dockerfile.control
-            css: "false"
     steps:
       - uses: actions/checkout@v4
-
-      - name: Set up Node (for Tailwind CSS)
-        if: matrix.css == 'true'
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: "22"
-
       - name: Build Tailwind CSS
-        if: matrix.css == 'true'
         run: |
           npm ci || npm install
           npm run build:css
-
       - uses: docker/setup-buildx-action@v3
-
       - name: Log in to GHCR
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build and push (linux/amd64)
+      - name: Build and push trap (linux/amd64)
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: ${{ matrix.dockerfile }}
+          file: Dockerfile.trap
           platforms: linux/amd64
           push: true
           tags: |
-            ghcr.io/${{ github.repository_owner }}/honeystack-${{ matrix.name }}:latest
-            ghcr.io/${{ github.repository_owner }}/honeystack-${{ matrix.name }}:${{ github.sha }}
+            ghcr.io/${{ github.repository_owner }}/honeystack-trap:latest
+            ghcr.io/${{ github.repository_owner }}/honeystack-trap:${{ github.sha }}
 
   # Deploy the trap to Akash, pointed at the live control tunnel (CONTROL_URL).
-  # The control server + ClickHouse + Guild run behind that tunnel, not on Akash.
   deploy:
-    needs: build-push
+    needs: build-trap
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
       - name: Render trap SDL and deploy to Akash
         env:
           AKASH_API_KEY: ${{ secrets.AKASH_API_KEY }}
@@ -89,5 +70,33 @@ jobs:
             grep -E 'DSEQ:|Service URI:' /tmp/deploy.out || echo "(no URI captured)";
             echo "";
             echo "Control tunnel: \`${CONTROL_URL}\`";
-            echo "> If the trap URL 404s, make the **honeystack-trap** GHCR package public (Actions pushes it private by default).";
           } >> "$GITHUB_STEP_SUMMARY"
+
+  # Optional: build+push the control image too (not on the deploy critical path;
+  # used for the all-on-Akash option in deploy/akash-full.yaml). New package, so
+  # the Actions token can create it. Does not block the trap deploy if it fails.
+  build-control:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and push control (linux/amd64)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile.control
+          platforms: linux/amd64
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/honeystack-control:latest
+            ghcr.io/${{ github.repository_owner }}/honeystack-control:${{ github.sha }}
