@@ -55,6 +55,7 @@ jobs:
         env:
           AKASH_API_KEY: ${{ secrets.AKASH_API_KEY }}
           SKIP_PROVIDERS: ${{ vars.SKIP_PROVIDERS }}
+          CLOSE_STALE: "1"   # one trap at a time: close older leases after deploy
           TRAP_IMAGE: ghcr.io/${{ github.repository_owner }}/honeystack-trap:${{ github.sha }}
           CONTROL_URL: ${{ vars.CONTROL_URL }}
           INGEST_TOKEN: ${{ secrets.INGEST_TOKEN }}
@@ -67,18 +68,11 @@ jobs:
           echo "::group::Rendered SDL (secrets redacted)"
           grep -vE 'TOKEN|PASSWORD|KEY' /tmp/trap.rendered.yaml || true
           echo "::endgroup::"
+          # deploy-stack.sh deploys, waits for the ingress URL, verifies it, and
+          # closes stale leases (CLOSE_STALE=1). Read DSEQ + URL from its output.
           sh scripts/deploy-stack.sh /tmp/trap.rendered.yaml | tee /tmp/deploy.out
           DSEQ="$(grep -oE 'DSEQ: [0-9]+' /tmp/deploy.out | head -1 | awk '{print $2}')"
-          # The ingress hostname can take longer than the deploy script waits;
-          # poll the deployment for up to 5 more minutes to capture the final URL.
-          URI=""
-          for i in $(seq 1 60); do
-            URI="$(curl -s "https://console-api.akash.network/v1/deployments/$DSEQ" \
-              -H "x-api-key: $AKASH_API_KEY" \
-              | jq -r '.data.leases[0].status.services.trap.uris[0] // empty')"
-            [ -n "$URI" ] && break
-            sleep 5
-          done
+          URI="$(grep -oE 'Service URI: [^ ]+' /tmp/deploy.out | awk '{print $3}' | grep -v 'not-ready-yet' || true)"
           echo "Resolved DSEQ=$DSEQ URI=${URI:-<pending>}"
           sh scripts/update-readme.sh "$DSEQ" "$URI" "ghcr.io/${{ github.repository_owner }}/honeystack-trap:${{ github.sha }}" "$CONTROL_URL"
           git config user.name  "github-actions[bot]"
