@@ -7,15 +7,18 @@ import net from 'node:net';
 const MAX_SESSION_MS = 15 * 60 * 1000; // hard cap on a live shell
 const IDLE_MS = 2 * 60 * 1000;         // close after silence
 const LINE_MAX = 16384;                // 16 KiB per input line
+// LLM-backed commands (especially the first one, while the Guild session starts) can take
+// well over 10 s, so command calls get a longer budget than /v1/shell/open.
+const CMD_TIMEOUT_MS = Number(process.env.SHELL_CMD_TIMEOUT_MS) || 90000;
 
-async function post(url, body, token) {
+async function post(url, body, token, timeoutMs = 10000) {
   try {
     const res = await fetch(url, {
       method: 'POST',
       redirect: 'error',
       headers: { 'content-type': 'application/json', authorization: `Bearer ${token}` },
       body: JSON.stringify(body),
-      signal: AbortSignal.timeout(10000)
+      signal: AbortSignal.timeout(timeoutMs)
     });
     if (!res.ok) return null;
     return await res.json().catch(() => ({}));
@@ -39,6 +42,8 @@ export async function openReverseShell(opts) {
   return new Promise((resolve) => {
     let seq = 0;
     let buf = '';
+    let prompt = open.prompt || '';
+    let queue = Promise.resolve(); // one command at a time, in typing order
     let closed = false;
     let idleTimer = null;
     let hardTimer = null;
@@ -74,24 +79,23 @@ export async function openReverseShell(opts) {
         let line = buf.slice(0, idx).replace(/\r$/, '');
         buf = buf.slice(idx + 1);
         if (line.length > LINE_MAX) line = line.slice(0, LINE_MAX);
-        if (line.trim() === '') { socket.write(open.prompt || ''); continue; }
+        if (line.trim() === '') { queue = queue.then(() => { if (!closed) socket.write(prompt); }); continue; }
         bumpIdle();
-        relay(line);
+        queue = queue.then(() => relay(line));
       }
       if (buf.length > LINE_MAX) buf = buf.slice(-LINE_MAX);
     });
 
     async function relay(command) {
-      const r = await post(`${base}/v1/shell/cmd`, { session_id: sessionId, seq: ++seq, command }, token);
+      const r = await post(`${base}/v1/shell/cmd`, { session_id: sessionId, seq: ++seq, command }, token, CMD_TIMEOUT_MS);
       if (closed) return;
-      if (!r) { socket.write('bash: fork: retry: Resource temporarily unavailable\n'); return; }
-      const write = () => {
-        if (closed) return;
-        socket.write((r.output || '') + (r.prompt || ''));
-        if (r.close) done();
-      };
-      if (r.delay_ms > 0) setTimeout(write, r.delay_ms);
-      else write();
+      // Real bash prints the prompt again after an error; a missing prompt looks like a hang.
+      if (!r) { socket.write('bash: fork: retry: Resource temporarily unavailable\n' + prompt); return; }
+      if (r.prompt !== undefined) prompt = r.prompt || prompt;
+      if (r.delay_ms > 0) await new Promise((ok) => setTimeout(ok, r.delay_ms));
+      if (closed) return;
+      socket.write((r.output || '') + (r.prompt ?? ''));
+      if (r.close) done();
     }
   });
 }
