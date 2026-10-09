@@ -1,6 +1,6 @@
 // Shell brain LLM backend that runs on Guild: one `honeystack-shell` session per attacker shell,
 // one follow-up message per command the fast path can't answer. See agents/GUILD_SETUP.md.
-import { guildFetch, type GuildConfig } from '../guild';
+import { guildFetch, isTransient, type GuildConfig } from '../guild';
 import type { World } from './world';
 
 const REPLY_TIMEOUT_MS = Number(process.env.GUILD_SHELL_TIMEOUT_MS || 60_000);
@@ -39,7 +39,13 @@ async function nextReply(cfg: GuildConfig, sessionId: string, afterId: string | 
     delay = Math.min(delay * 1.4, 3000);
     const q = new URLSearchParams({ types: 'runtime_done,runtime_error', limit: '20', sort_by: 'id' });
     if (afterId) q.set('from_id', afterId);
-    const events = await guildFetch(cfg, `/sessions/${sessionId}/events?${q}`);
+    let events: any;
+    try {
+      events = await guildFetch(cfg, `/sessions/${sessionId}/events?${q}`);
+    } catch (err) {
+      if (isTransient(err)) continue;
+      throw err;
+    }
     for (const e of events.items ?? []) {
       if (e.type === 'runtime_error') throw new Error('honeystack-shell reported runtime_error');
       const text = typeof e.content === 'string' ? e.content : e.content?.text ?? e.content?.data;

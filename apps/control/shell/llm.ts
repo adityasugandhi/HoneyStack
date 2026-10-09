@@ -106,9 +106,21 @@ async function askViaAnthropic(world: World, s: ShellSession, command: string, r
   }
 }
 
+// Real commands on this box. Replacing their output with "command not found" would be a tell,
+// so a filtered reply to one of these prints nothing instead.
+const REAL_COMMANDS = new Set([
+  'ls', 'cat', 'cd', 'pwd', 'id', 'whoami', 'echo', 'env', 'printenv', 'export', 'find', 'grep', 'egrep', 'head', 'tail',
+  'less', 'more', 'ps', 'top', 'kill', 'df', 'du', 'free', 'uptime', 'uname', 'hostname', 'mount', 'stat', 'file', 'wc',
+  'sort', 'uniq', 'cut', 'awk', 'sed', 'tr', 'xargs', 'tee', 'touch', 'mkdir', 'rm', 'cp', 'mv', 'chmod', 'chown', 'ln',
+  'tar', 'gzip', 'gunzip', 'zcat', 'base64', 'md5sum', 'sha256sum', 'date', 'sleep', 'which', 'type', 'history', 'crontab',
+  'ip', 'ifconfig', 'netstat', 'ss', 'route', 'arp', 'nslookup', 'dig', 'curl', 'wget', 'ping', 'nc', 'sudo', 'su',
+  'node', 'npm', 'npx', 'yarn', 'psql', 'pg_dump', 'busybox', 'apk', 'getent', 'w', 'who', 'last', 'dmesg', 'lsof',
+]);
+
 export function notFound(command: string): string {
   const first = command.trim().split(/\s+/)[0] ?? '';
-  return first ? `bash: ${first}: command not found\n` : '';
+  if (!first || REAL_COMMANDS.has(first) || first.startsWith('/') || first.startsWith('./')) return '';
+  return `bash: ${first}: command not found\n`;
 }
 
 const ASSISTANT_TELLS = [
@@ -123,7 +135,11 @@ export function filterOutput(command: string, raw: string): Omit<LlmAnswer, 'bac
   const fenced = /^\s*```[a-z]*\n([\s\S]*?)\n?```\s*$/.exec(text);
   if (fenced) text = fenced[1];
   text = text.replace(/^\(no output\)\s*$/i, '');
-  if (ASSISTANT_TELLS.some((re) => re.test(text))) return { output: notFound(command), filtered: true };
+  const tell = ASSISTANT_TELLS.find((re) => re.test(text));
+  if (tell) {
+    console.warn(`[shell-brain] filtered reply to ${JSON.stringify(command)} (matched ${tell}): ${JSON.stringify(text.slice(0, 300))}`);
+    return { output: notFound(command), filtered: true };
+  }
   if (text !== '' && !text.endsWith('\n')) text += '\n';
   return { output: text, filtered: false };
 }

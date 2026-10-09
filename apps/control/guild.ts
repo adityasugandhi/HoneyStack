@@ -148,10 +148,17 @@ export async function guildFetch(cfg: GuildConfig, route: string, init: RequestI
       'content-type': 'application/json',
       ...(init.headers ?? {}),
     },
-    signal: AbortSignal.timeout(15_000),
+    signal: AbortSignal.timeout(30_000),
   });
   if (!res.ok) throw new Error(`Guild ${init.method ?? 'GET'} ${route} -> HTTP ${res.status}: ${(await res.text()).slice(0, 300)}`);
   return res.json();
+}
+
+/** Timeouts, network errors and 5xx/429 from Guild are worth retrying on the next poll. */
+export function isTransient(err: unknown): boolean {
+  if (!(err instanceof Error)) return false;
+  if (err.name === 'TimeoutError' || err.name === 'AbortError' || /aborted|fetch failed|ECONNRESET/i.test(err.message)) return true;
+  return /HTTP (429|5\d\d)/.test(err.message);
 }
 
 export async function startGuildSession(cfg: GuildConfig, text: string): Promise<{ id: string; session_url: string }> {
@@ -171,14 +178,23 @@ export async function waitForReply(cfg: GuildConfig, sessionId: string, timeoutM
   while (Date.now() < deadline) {
     await new Promise((ok) => setTimeout(ok, delay));
     delay = Math.min(delay * 1.5, 8000);
-    const events = await guildFetch(cfg, `/sessions/${sessionId}/events?types=runtime_done,runtime_error&limit=10`);
+    let events: any;
+    try {
+      events = await guildFetch(cfg, `/sessions/${sessionId}/events?types=runtime_done,runtime_error&limit=10`);
+    } catch (err) {
+      if (isTransient(err)) continue; // a slow or failed poll is not a failed analysis
+      throw err;
+    }
     for (const e of events.items ?? []) {
       if (e.type === 'runtime_error') throw new Error('Guild agent reported runtime_error');
       const text = typeof e.content === 'string' ? e.content : e.content?.text ?? e.content?.data;
       if (typeof text === 'string' && text.trim()) return text;
     }
-    const session = await guildFetch(cfg, `/sessions/${sessionId}`);
-    const status = session.root_task?.status;
+    const session = await guildFetch(cfg, `/sessions/${sessionId}`).catch((err) => {
+      if (isTransient(err)) return undefined;
+      throw err;
+    });
+    const status = session?.root_task?.status;
     if (status === 'ERROR' || status === 'INTERRUPTED') throw new Error(`Guild session ended with ${status}`);
   }
   throw new Error(`Guild agent did not reply within ${Math.round(timeoutMs / 1000)}s`);
