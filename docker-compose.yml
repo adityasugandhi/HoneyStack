@@ -1,0 +1,40 @@
+# Local "connected containers" view of the stack: trap -> control -> ClickHouse.
+# ClickHouse is managed (ClickHouse Cloud), so it is not a container here — set
+# CLICKHOUSE_* in a local .env. Run: `docker compose up --build`.
+services:
+  control:
+    build:
+      context: .
+      dockerfile: Dockerfile.control
+    environment:
+      - CONTROL_HOST=0.0.0.0
+      - CONTROL_PORT=8080
+      - CLICKHOUSE_URL=${CLICKHOUSE_URL:-}
+      - CLICKHOUSE_USER=${CLICKHOUSE_USER:-}
+      - CLICKHOUSE_PASSWORD=${CLICKHOUSE_PASSWORD:-}
+      - INGEST_TOKEN=${INGEST_TOKEN:-devtoken}
+      - CONTROL_TOKEN=${CONTROL_TOKEN:-devtoken}
+      - LLM_API_KEY=${LLM_API_KEY:-}
+      - SHELL_BACKEND=${SHELL_BACKEND:-anthropic}
+      - GUILD_TRIGGER_KEY=${GUILD_TRIGGER_KEY:-}
+      - GUILD_OWNER=${GUILD_OWNER:-}
+      - GUILD_WORKSPACE=${GUILD_WORKSPACE:-}
+    ports:
+      - "8080:8080"
+
+  trap:
+    build:
+      context: .
+      dockerfile: Dockerfile.trap
+    depends_on:
+      - control
+    environment:
+      - PORT=3000
+      - TRAP_INSTANCE_ID=demo-local
+      - DEMO_MODE=false
+      - CONTROL_URL=http://control:8080
+      - INGEST_TOKEN=${INGEST_TOKEN:-devtoken}
+      - CALLBACK_ALLOWLIST=${CALLBACK_ALLOWLIST:-}
+      - REVSHELL_HOLD_MS=30000
+    ports:
+      - "3000:3000"

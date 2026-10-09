@@ -1,0 +1,15 @@
+# Control server (Fastify :8080): ingest (C) + shell-brain (B) + Guild (E).
+# Runs TypeScript directly via tsx. Connects out to ClickHouse Cloud and the
+# Anthropic/Guild APIs — no secrets are baked in; they come from env at runtime.
+FROM node:22-alpine
+WORKDIR /app
+COPY package.json package-lock.json* ./
+# --include=dev keeps tsx/typescript (devDeps) which run the server.
+RUN npm ci --include=dev || npm install --include=dev
+COPY apps/control ./apps/control
+COPY packages ./packages
+COPY tsconfig.json ./tsconfig.json
+ENV NODE_ENV=production CONTROL_HOST=0.0.0.0 CONTROL_PORT=8080
+USER node
+EXPOSE 8080
+CMD ["npx", "tsx", "apps/control/server.ts"]

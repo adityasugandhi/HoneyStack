@@ -1,0 +1,81 @@
+# Full HoneyStack stack SDL — two connected services on Akash.
+#   trap    (public)  :3000 -> global :80
+#   control (internal):8080, reachable only by trap (to: service: trap)
+# ClickHouse is managed (ClickHouse Cloud) — reached over HTTPS, not a service here.
+#
+# This committed file holds ${PLACEHOLDERS}; CI renders a filled copy with
+# `envsubst` at deploy time, so no secret is ever committed.
+version: "2.0"
+services:
+  trap:
+    image: ${TRAP_IMAGE}
+    env:
+      - NODE_ENV=production
+      - PORT=3000
+      - TRAP_INSTANCE_ID=demo-1
+      - DEMO_MODE=false
+      - CONTROL_URL=http://control:8080
+      - INGEST_TOKEN=${INGEST_TOKEN}
+      - CALLBACK_ALLOWLIST=${CALLBACK_ALLOWLIST}
+      - REVSHELL_HOLD_MS=30000
+    expose:
+      - port: 3000
+        as: 80
+        to:
+          - global: true
+  control:
+    image: ${CONTROL_IMAGE}
+    env:
+      - NODE_ENV=production
+      - CONTROL_HOST=0.0.0.0
+      - CONTROL_PORT=8080
+      - CLICKHOUSE_URL=${CLICKHOUSE_URL}
+      - CLICKHOUSE_USER=${CLICKHOUSE_USER}
+      - CLICKHOUSE_PASSWORD=${CLICKHOUSE_PASSWORD}
+      - INGEST_TOKEN=${INGEST_TOKEN}
+      - CONTROL_TOKEN=${CONTROL_TOKEN}
+      - LLM_API_KEY=${LLM_API_KEY}
+      - SHELL_BACKEND=${SHELL_BACKEND}
+      - GUILD_TRIGGER_KEY=${GUILD_TRIGGER_KEY}
+      - GUILD_OWNER=${GUILD_OWNER}
+      - GUILD_WORKSPACE=${GUILD_WORKSPACE}
+    expose:
+      - port: 8080
+        to:
+          - service: trap
+profiles:
+  compute:
+    trap:
+      resources:
+        cpu:
+          units: 0.25
+        memory:
+          size: 256Mi
+        storage:
+          size: 256Mi
+    control:
+      resources:
+        cpu:
+          units: 0.5
+        memory:
+          size: 512Mi
+        storage:
+          size: 512Mi
+  placement:
+    demo:
+      pricing:
+        trap:
+          denom: uact
+          amount: 10000
+        control:
+          denom: uact
+          amount: 10000
+deployment:
+  trap:
+    demo:
+      profile: trap
+      count: 1
+  control:
+    demo:
+      profile: control
+      count: 1
