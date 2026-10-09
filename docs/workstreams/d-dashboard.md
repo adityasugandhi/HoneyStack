@@ -28,3 +28,5 @@ During a live run, new commands appear within 5 s, the counter ticks, and Analyz
 ## Hand-offs
 - **From C:** query functions (checkpoint 2).
 - **From E:** `/v1/analyze` (you can stub it to return a canned summary until then).
+
+**Current plan:** [`docs/dashboard-plan.md`](../dashboard-plan.md) ("HoneyStack Shield" plugin page: screens, data sources, routes, auth, order of work).
