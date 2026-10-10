@@ -65,7 +65,7 @@ jobs:
           CLOSE_STALE: ${{ github.ref_name == 'main' && '1' || '0' }}
           ON_MAIN: ${{ github.ref_name == 'main' && 'yes' || 'no' }}
           REF_NAME: ${{ github.ref_name }}
-          RENDER_FULL: ${{ github.event.inputs.deploy_full == 'true' && 'yes' || 'no' }}
+          RENDER_FULL: ${{ (github.event.inputs.deploy_full == 'true' || vars.DEPLOY_FULL == '1') && 'yes' || 'no' }}
           CLICKHOUSE_URL: ${{ vars.CLICKHOUSE_URL }}
           CLICKHOUSE_USER: ${{ vars.CLICKHOUSE_USER }}
           CLICKHOUSE_PASSWORD: ${{ secrets.CLICKHOUSE_PASSWORD }}
