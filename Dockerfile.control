@@ -7,8 +7,14 @@ COPY package.json package-lock.json* ./
 # --include=dev keeps tsx/typescript (devDeps) which run the server.
 RUN npm ci --include=dev || npm install --include=dev
 COPY apps/control ./apps/control
+COPY apps/dashboard ./apps/dashboard
 COPY packages ./packages
 COPY tsconfig.json ./tsconfig.json
+# Ingest's dev fallback writes data/events.jsonl; create it writable (we run as node).
+RUN mkdir -p /app/data /app/apps/control/data \
+ && chown -R node:node /app/data /app/apps/control/data /app/apps/dashboard/public
+# Build the dashboard's Tailwind CSS (needed by apps/dashboard/serve.ts).
+RUN npx tailwindcss -c tailwind.config.cjs -i apps/dashboard/styles.src.css -o apps/dashboard/public/dashboard.css --minify || true
 ENV NODE_ENV=production CONTROL_HOST=0.0.0.0 CONTROL_PORT=8080
 USER node
 EXPOSE 8080

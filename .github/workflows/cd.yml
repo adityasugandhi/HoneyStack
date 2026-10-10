@@ -4,6 +4,11 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      deploy_full:
+        description: "Deploy the FULL stack (trap + control on Akash, ClickHouse Cloud)"
+        type: boolean
+        default: false
 
 concurrency:
   group: cd-${{ github.ref }}
@@ -55,6 +60,22 @@ jobs:
         env:
           AKASH_API_KEY: ${{ secrets.AKASH_API_KEY }}
           SKIP_PROVIDERS: ${{ vars.SKIP_PROVIDERS }}
+          # Only reconcile to one-trap and touch main from a main run. A PR/branch
+          # run deploys a throwaway trap, verifies it, and leaves main's lease alone.
+          CLOSE_STALE: ${{ github.ref_name == 'main' && '1' || '0' }}
+          ON_MAIN: ${{ github.ref_name == 'main' && 'yes' || 'no' }}
+          REF_NAME: ${{ github.ref_name }}
+          RENDER_FULL: ${{ (github.event.inputs.deploy_full == 'true' || vars.DEPLOY_FULL == '1') && 'yes' || 'no' }}
+          CLICKHOUSE_URL: ${{ vars.CLICKHOUSE_URL }}
+          CLICKHOUSE_USER: ${{ vars.CLICKHOUSE_USER }}
+          CLICKHOUSE_PASSWORD: ${{ secrets.CLICKHOUSE_PASSWORD }}
+          CONTROL_TOKEN: ${{ secrets.CONTROL_TOKEN }}
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+          SHELL_BACKEND: ${{ vars.SHELL_BACKEND }}
+          GUILD_TRIGGER_KEY: ${{ secrets.GUILD_TRIGGER_KEY }}
+          GUILD_OWNER: ${{ secrets.GUILD_OWNER }}
+          GUILD_WORKSPACE: ${{ secrets.GUILD_WORKSPACE }}
+          CONTROL_IMAGE: ghcr.io/${{ github.repository_owner }}/honeystack-control:${{ github.sha }}
           TRAP_IMAGE: ghcr.io/${{ github.repository_owner }}/honeystack-trap:${{ github.sha }}
           CONTROL_URL: ${{ vars.CONTROL_URL }}
           INGEST_TOKEN: ${{ secrets.INGEST_TOKEN }}
@@ -62,34 +83,41 @@ jobs:
         run: |
           set -euo pipefail
           command -v envsubst >/dev/null 2>&1 || (sudo apt-get update && sudo apt-get install -y gettext-base)
-          envsubst '${TRAP_IMAGE} ${CONTROL_URL} ${INGEST_TOKEN} ${CALLBACK_ALLOWLIST}' \
-            < deploy/akash.yaml > /tmp/trap.rendered.yaml
+          if [ "$RENDER_FULL" = "yes" ]; then
+            # Full stack: trap + control on Akash (control talks to ClickHouse Cloud).
+            # Unset secrets (LLM/GUILD) substitute as empty — the shell brain then
+            # serves the fast path only and analyst routes degrade gracefully.
+            export SHELL_BACKEND="${SHELL_BACKEND:-anthropic}"
+            envsubst '${TRAP_IMAGE} ${CONTROL_IMAGE} ${CLICKHOUSE_URL} ${CLICKHOUSE_USER} ${CLICKHOUSE_PASSWORD} ${INGEST_TOKEN} ${CONTROL_TOKEN} ${LLM_API_KEY} ${GUILD_TRIGGER_KEY} ${GUILD_OWNER} ${GUILD_WORKSPACE} ${CALLBACK_ALLOWLIST} ${SHELL_BACKEND}' \
+              < deploy/akash-full.yaml > /tmp/trap.rendered.yaml
+          else
+            envsubst '${TRAP_IMAGE} ${CONTROL_URL} ${INGEST_TOKEN} ${CALLBACK_ALLOWLIST}' \
+              < deploy/akash.yaml > /tmp/trap.rendered.yaml
+          fi
           echo "::group::Rendered SDL (secrets redacted)"
           grep -vE 'TOKEN|PASSWORD|KEY' /tmp/trap.rendered.yaml || true
           echo "::endgroup::"
+          # deploy-stack.sh deploys, waits for the ingress URL, verifies it, and
+          # closes stale leases (CLOSE_STALE=1). Read DSEQ + URL from its output.
           sh scripts/deploy-stack.sh /tmp/trap.rendered.yaml | tee /tmp/deploy.out
           DSEQ="$(grep -oE 'DSEQ: [0-9]+' /tmp/deploy.out | head -1 | awk '{print $2}')"
-          # The ingress hostname can take longer than the deploy script waits;
-          # poll the deployment for up to 5 more minutes to capture the final URL.
-          URI=""
-          for i in $(seq 1 60); do
-            URI="$(curl -s "https://console-api.akash.network/v1/deployments/$DSEQ" \
-              -H "x-api-key: $AKASH_API_KEY" \
-              | jq -r '.data.leases[0].status.services.trap.uris[0] // empty')"
-            [ -n "$URI" ] && break
-            sleep 5
-          done
+          URI="$(grep -oE 'Service URI: [^ ]+' /tmp/deploy.out | awk '{print $3}' | grep -v 'not-ready-yet' || true)"
           echo "Resolved DSEQ=$DSEQ URI=${URI:-<pending>}"
-          sh scripts/update-readme.sh "$DSEQ" "$URI" "ghcr.io/${{ github.repository_owner }}/honeystack-trap:${{ github.sha }}" "$CONTROL_URL"
-          git config user.name  "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add README.md
-          if git diff --cached --quiet; then
-            echo "README already current."
+          if [ "$ON_MAIN" != "yes" ]; then
+            echo "Not on main (ref=$REF_NAME): skipping README auto-commit; main's lease untouched."
+            echo "NOTE: this branch run left a throwaway trap at DSEQ=$DSEQ — close it with scripts/close-deployment.sh $DSEQ"
           else
-            git commit -m "docs: auto-update live Akash trap URL [skip ci]"
-            git pull --rebase --autostash origin main || true
-            git push origin HEAD:main
+            sh scripts/update-readme.sh "$DSEQ" "$URI" "$TRAP_IMAGE" "$CONTROL_URL"
+            git config user.name  "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add README.md
+            if git diff --cached --quiet; then
+              echo "README already current."
+            else
+              git commit -m "docs: auto-update live Akash trap URL [skip ci]"
+              git pull --rebase --autostash origin main || true
+              git push origin HEAD:main
+            fi
           fi
           {
             echo "## Akash trap deploy";

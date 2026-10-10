@@ -50,10 +50,11 @@ curl -sX POST "$API/v1/leases" -H "x-api-key: $AKASH_API_KEY" -H "Content-Type: 
   -d "$(jq -nc --argjson id "$BID" '{leases:[{dseq:$id.dseq,gseq:$id.gseq,oseq:$id.oseq,provider:$id.provider}]}')" \
   | jq -r '.data.leases[0].id // .error // "unexpected lease response"'
 
-echo "=== wait for trap URI (up to 180s) ==="
+echo "=== wait for trap URI (the ingress comes up fast once the lease is active) ==="
 HOST=""
 for i in $(seq 1 36); do
-  ST=$(curl -s "$API/v1/deployments/$DSEQ" -H "x-api-key: $AKASH_API_KEY")
+  # Strip control chars: the provider status embeds raw bytes that break jq otherwise.
+  ST=$(curl -s "$API/v1/deployments/$DSEQ" -H "x-api-key: $AKASH_API_KEY" | tr -d '\000-\010\013\014\016-\037')
   HOST=$(echo "$ST" | jq -r '.data.leases[0].status.services.trap.uris[0] // empty' 2>/dev/null || true)
   echo "  attempt $i: trap uri=${HOST:-pending}"
   [ -n "$HOST" ] && break
@@ -63,8 +64,43 @@ done
 echo ""
 echo "DSEQ: $DSEQ"
 echo "Service URI: ${HOST:-not-ready-yet}"
+# Multi-service SDLs (trap + control): surface the control (dashboard) URI too.
+if [ -n "${ST:-}" ]; then
+  CTL_URI=$(printf '%s' "$ST" | tr -d '\000-\010\013\014\016-\037' | jq -r '.data.leases[0].status.services.control.uris[0] // empty' 2>/dev/null || true)
+  [ -n "$CTL_URI" ] && echo "Control URI: $CTL_URI"
+fi
 if [ -n "$HOST" ]; then
   echo "=== trap /health ==="
   curl -s -m 10 "http://$HOST/health" || true; echo
+  [ -n "$CTL_URI" ] && { echo "=== control /health ==="; curl -s -m 10 "http://$CTL_URI/health" || true; echo; }
 fi
+
+# One trap at a time: close every other active honeystack lease (CD sets CLOSE_STALE=1).
+# CRITICAL ORDERING: only close the old lease(s) AFTER the new one is confirmed
+# serving (health 200). Never close before, or there's a gap with nothing live.
+if [ "${CLOSE_STALE:-0}" = "1" ]; then
+  NEW_OK=0
+  if [ -n "$HOST" ]; then
+    CODE=$(curl -s -m 10 -o /dev/null -w "%{http_code}" "http://$HOST/health" 2>/dev/null || echo 000)
+    [ "$CODE" = "200" ] && NEW_OK=1
+    echo "new trap health: HTTP $CODE"
+  fi
+  if [ "$NEW_OK" = "1" ]; then
+    echo "=== new trap $DSEQ verified healthy; closing stale honeystack leases ==="
+    curl -s "$API/v1/deployments" -H "x-api-key: $AKASH_API_KEY" \
+      | tr -d '\000-\010\013\014\016-\037' \
+      | jq -r --arg keep "$DSEQ" '.data.deployments[]
+          | select(.deployment.state=="active")
+          | select(.name // "" | startswith("honeystack"))
+          | .deployment.id.dseq | select(. != $keep)' 2>/dev/null \
+      | while read -r OLD; do
+          [ -n "$OLD" ] || continue
+          echo "  closing $OLD"
+          curl -sX DELETE "$API/v1/deployments/$OLD" -H "x-api-key: $AKASH_API_KEY" >/dev/null 2>&1 || true
+        done
+  else
+    echo "WARNING: new trap $DSEQ not confirmed healthy (uri=${HOST:-none}); keeping ALL leases so nothing goes dark. Clean up manually if needed."
+  fi
+fi
+
 echo "Close with: sh scripts/close-deployment.sh $DSEQ"
