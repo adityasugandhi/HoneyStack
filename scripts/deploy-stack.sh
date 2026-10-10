@@ -64,9 +64,15 @@ done
 echo ""
 echo "DSEQ: $DSEQ"
 echo "Service URI: ${HOST:-not-ready-yet}"
+# Multi-service SDLs (trap + control): surface the control (dashboard) URI too.
+if [ -n "${ST:-}" ]; then
+  CTL_URI=$(printf '%s' "$ST" | tr -d '\000-\010\013\014\016-\037' | jq -r '.data.leases[0].status.services.control.uris[0] // empty' 2>/dev/null || true)
+  [ -n "$CTL_URI" ] && echo "Control URI: $CTL_URI"
+fi
 if [ -n "$HOST" ]; then
   echo "=== trap /health ==="
   curl -s -m 10 "http://$HOST/health" || true; echo
+  [ -n "$CTL_URI" ] && { echo "=== control /health ==="; curl -s -m 10 "http://$CTL_URI/health" || true; echo; }
 fi
 
 # One trap at a time: close every other active honeystack lease (CD sets CLOSE_STALE=1).

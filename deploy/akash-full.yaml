@@ -29,6 +29,9 @@ services:
       - NODE_ENV=production
       - CONTROL_HOST=0.0.0.0
       - CONTROL_PORT=8080
+      # Also exposed globally (below) so operators can open the Shield dashboard
+      # from a browser; all state-changing routes are token-gated in production.
+      - ADMIN_ALLOW_REMOTE=1
       - CLICKHOUSE_URL=${CLICKHOUSE_URL}
       - CLICKHOUSE_USER=${CLICKHOUSE_USER}
       - CLICKHOUSE_PASSWORD=${CLICKHOUSE_PASSWORD}
@@ -43,6 +46,10 @@ services:
       - port: 8080
         to:
           - service: trap
+      - port: 8080
+        as: 80
+        to:
+          - global: true
 profiles:
   compute:
     trap:

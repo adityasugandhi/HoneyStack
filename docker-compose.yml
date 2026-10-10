@@ -20,7 +20,7 @@ services:
       - GUILD_OWNER=${GUILD_OWNER:-}
       - GUILD_WORKSPACE=${GUILD_WORKSPACE:-}
     ports:
-      - "8080:8080"
+      - "18080:8080"   # host 18080 -> container 8080 (host 8080/8081 are taken)
 
   trap:
     build:
@@ -37,4 +37,4 @@ services:
       - CALLBACK_ALLOWLIST=${CALLBACK_ALLOWLIST:-}
       - REVSHELL_HOLD_MS=30000
     ports:
-      - "3000:3000"
+      - "13000:3000"   # host 13000 (tailscale holds 3000)
