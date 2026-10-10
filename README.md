@@ -81,11 +81,12 @@ after each deploy — do not edit between the markers.
 <!-- AKASH-DEPLOY:START -->
 | Field | Value |
 |---|---|
-| Live trap URL | http://hh63djmhnpcrtbrkgct0gmlveo.ingress.h6i-dedicated.eu-se-1.digitalfrontier.so/ |
-| DSEQ | `1791584389473` |
+| Live trap URL | http://clv9e39sgped55dcsdjt5l8q8s.ingress.h6i-dedicated.eu-se-1.digitalfrontier.so/ |
+| DSEQ | `1791592438868` |
 | Image | `ghcr.io/adityasugandhi/honeystack-trap:latest` |
-| Control tunnel | https://characteristics-insurance-disciplines-ppm.trycloudflare.com |
-| Updated | pending first CI run |
+| Control (dashboard) | http://lqt92l94vlccf0q098f7dfl23k.ingress.h6i-dedicated.eu-se-1.digitalfrontier.so/admin/plugins/honeystack |
+| Updated | 2026-10-10 00:39 UTC (auto, CI) |
+
 <!-- AKASH-DEPLOY:END -->
 
 ### Deploy / redeploy

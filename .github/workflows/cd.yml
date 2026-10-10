@@ -59,6 +59,7 @@ jobs:
       - name: Render trap SDL and deploy to Akash
         env:
           AKASH_API_KEY: ${{ secrets.AKASH_API_KEY }}
+          GH_TOKEN: ${{ github.token }}          # gh pr create for the README sync branch
           SKIP_PROVIDERS: ${{ vars.SKIP_PROVIDERS }}
           # Only reconcile to one-trap and touch main from a main run. A PR/branch
           # run deploys a throwaway trap, verifies it, and leaves main's lease alone.
@@ -114,9 +115,13 @@ jobs:
             if git diff --cached --quiet; then
               echo "README already current."
             else
+              # main is branch-protected: push to a sync branch and open a PR.
               git commit -m "docs: auto-update live Akash trap URL [skip ci]"
-              git pull --rebase --autostash origin main || true
-              git push origin HEAD:main
+              git push -f origin "HEAD:docs/akash-url-sync"
+              gh pr create --base main --head docs/akash-url-sync \
+                --title "docs: update live Akash URLs (auto)" \
+                --body "Automated from the CD deploy. Merge to refresh the README table." \
+                || echo "README sync PR already open — branch updated."
             fi
           fi
           {
